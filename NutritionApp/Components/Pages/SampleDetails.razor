@@ -1,0 +1,50 @@
+﻿@page "/sample-details/{IntegrationId}"
+@using NutritionApp.Models
+@inject NavigationManager NavigationManager
+@inject IHttpClientFactory HttpClientFactory
+
+<h3>Sample Details</h3>
+
+@if (Sample != null)
+{
+	<dl>
+		<dt>分析項分類</dt>
+		<dd>@Sample.NutritionalFact.分析項分類</dd>
+		<dt>分析項</dt>
+		<dd>@Sample.NutritionalFact.分析項</dd>
+		<dt>單位</dt>
+		<dd>@Sample.NutritionalFact.單位</dd>
+		<dt>每100克含量</dt>
+		<dd>@Sample.NutritionalFact.每100克含量</dd>
+	</dl>
+	<button @onclick="GoBack">Back to List</button>
+}
+else if (IsLoading)
+{
+	<p>Loading...</p>
+}
+else
+{
+	<p>Sample not found.</p>
+}
+
+@code {
+	[Parameter] public string IntegrationId { get; set; }
+
+	private SampleData Sample { get; set; }
+	private bool IsLoading { get; set; } = true;
+
+	protected override async Task OnInitializedAsync()
+	{
+		var httpClient = HttpClientFactory.CreateClient();
+		var response = await httpClient.GetFromJsonAsync<List<SampleData>>("/samples"); // 注意這裡是相對路徑
+		Sample = response?.FirstOrDefault();
+
+		IsLoading = false;
+	}
+
+	private void GoBack()
+	{
+		NavigationManager.NavigateTo("/samples");
+	}
+}

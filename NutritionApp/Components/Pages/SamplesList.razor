@@ -1,0 +1,111 @@
+﻿@page "/samples"
+@inject NavigationManager NavigationManager
+@using NutritionApp.Models
+@using NutritionApp.Services
+
+<h3>Sample List</h3>
+
+<div>
+    <label for="sampleName">樣品名稱：</label>
+    <InputText id="sampleName" @bind-Value="SampleName" placeholder="請輸入樣品名稱..." />
+</div>
+<div>
+    <label for="commonName">俗名：</label>
+    <InputText id="commonName" @bind-Value="CommonName" placeholder="請輸入俗名..." />
+</div>
+<button @onclick="FetchData">Search</button>
+
+@if (Samples.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>項次</th>
+                <th>整合編號</th>
+                <th>樣品名稱</th>
+                <th>俗名</th>
+                <th>樣品英文名稱</th>
+                <th>內容物描述</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (var i = 0; i < Samples.Count; i++)
+            {
+                var sample = Samples[i];
+                <tr @onclick="() => ShowDetails(sample.整合編號)" style="cursor: pointer;">
+                    <td>@i</td>
+                    <td>@sample.整合編號</td>
+                    <td>@sample.樣品名稱</td>
+                    <td>@sample.俗名</td>
+                    <td>@sample.樣品英文名稱</td>
+                    <td>@sample.內容物描述</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else if (IsLoading)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <p>No data available.</p>
+}
+
+@code {
+    private string? SampleName { get; set; }
+    private string? CommonName { get; set; }
+    private int? Limit { get; set; } = 100;
+    private bool IsLoading { get; set; }
+
+    private List<SampleData> Samples { get; set; } = new();
+
+    private async Task FetchData()
+    {
+        IsLoading = true;
+
+        // Call the API using the generated API client
+        using var httpClient = new HttpClient();
+        var apiClient = new FdaNutritionDatabaseClient(httpClient);
+        var response = await apiClient.ActivityGetAsync(
+            method: Method.OpenData,
+            infoId: InfoId._20,
+            offset: null,
+            limit: Limit,
+            sort: Sort.整合編號,
+            食品分類: null,
+            樣品名稱: SampleName,
+            俗名: CommonName,
+            樣品英文名稱: null,
+            分析項分類: null,
+            分析項: null
+        );
+
+        Samples = response
+            .GroupBy(row => row.整合編號) // 依據整合編號分組
+            .Select((group, index) => new SampleData
+                {
+                    // 項次 = index + 1,
+                    整合編號 = group.Key,
+                    樣品名稱 = group.First().樣品名稱,
+                    俗名 = group.First().俗名,
+                    樣品英文名稱 = group.First().樣品英文名稱,
+                    內容物描述 = group.First().內容物描述
+                })
+            .ToList();
+
+        IsLoading = false;
+    }
+
+    private void ShowDetails(string integrationId)
+    {
+        NavigationManager.NavigateTo($"/sample-details/{integrationId}");
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+            await FetchData();
+    }
+}
