@@ -1,4 +1,4 @@
-using NutritionApp.Components;
+﻿using NutritionApp.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// �K�[ HttpClient �䴩
+// 添加 HttpClient 支援
 builder.Services.AddHttpClient();
 
 var app = builder.Build();
