@@ -1,15 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NutritionApp.Models;
+
 namespace NutritionApp.Controllers;
 
 [Route("specials")]
 [ApiController]
 public class SamplesController : Controller
 {
-    private readonly SampleStoreContext _db;
+    private readonly SampleContext _db;
 
-    public SamplesController(SampleStoreContext db)
+    public SamplesController(SampleContext db)
     {
         _db = db;
     }

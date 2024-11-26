@@ -7,15 +7,18 @@
 
 @if (Sample != null)
 {
-	@for (var i = 0; i < Sample.AnalysisItemCatagories.Length; i++)
+	var analysisItems = Sample.AnalysisItemCatagories
+		.SelectMany(x => x.AnalysisItems.Select(i => new {x.分析項分類, i.分析項, i.單位, i.每100克含量}))
+		.ToArray();
+	@for (var i = 0; i < analysisItems.Length; i++)
 	{
-		var item = Sample.AnalysisItemCatagories[i];
+		var item = analysisItems[i];
 		<tr>
 			<td>@i</td>
 			<td>@item.分析項分類</td>
-			<td>@item.AnalysisItem.分析項</td>
-			<td>@item.AnalysisItem.單位</td>
-			<td>@item.AnalysisItem.每100克含量</td>
+			<td>@item.分析項</td>
+			<td>@item.單位</td>
+			<td>@item.每100克含量</td>
 		</tr>
 	}
 	<button @onclick="GoBack">Back to List</button>

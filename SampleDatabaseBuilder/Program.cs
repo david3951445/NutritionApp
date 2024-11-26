@@ -3,26 +3,31 @@ using NutritionApp.Models;
 using NutritionApp.Services;
 
 Console.WriteLine("Construct file path...");
-string folderPath = AppDomain.CurrentDomain.BaseDirectory;
-for (int i = 0; i < 5; i++)
-    folderPath = Path.GetDirectoryName(folderPath);
-folderPath = Path.Combine(folderPath, "FdaNutritionData");
-string inputFilePath = Path.Combine(folderPath, "20_5.json");
-string outputFilePath = Path.Combine(folderPath, "20_5_output.json");
+string folderPath = Path.Join(SampleService.SolutionPath, "FdaNutritionData");
+string inputFilePath = Path.Join(folderPath, "20_5.json");
+string outputFilePath = Path.Join(folderPath, "20_5_output.json");
 
 Console.WriteLine("Read json file and convert to target object type...");
 string json = File.ReadAllText(inputFilePath);
 var objects = JsonSerializer.Deserialize<RowData[]>(json);
-var samples = Sample.ConvertToSamples(objects);
+var samples = SampleService.ConvertToSamples(objects);
 
-Console.WriteLine("Output json...");
-var options = new JsonSerializerOptions()
+Console.WriteLine("Write to database...");
+using (var db = new SampleContext())
 {
-    WriteIndented = true, // Enable pretty-printing
-    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping // Preserve Chinese characters
-};
-string outputJson = JsonSerializer.Serialize(samples, options);
-File.WriteAllText(outputFilePath, outputJson);
+    foreach (var sample in samples)
+        db.Add(sample);
+    db.SaveChanges();
+}
+
+// Console.WriteLine("Output json...");
+// var options = new JsonSerializerOptions()
+// {
+//     WriteIndented = true, // Enable pretty-printing
+//     Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping // Preserve Chinese characters
+// };
+// string outputJson = JsonSerializer.Serialize(samples, options);
+// File.WriteAllText(outputFilePath, outputJson);
 
 Console.WriteLine("Convert complete.");
 

@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddHttpClient();
-builder.Services.AddSqlite<SampleStoreContext>("Data Source=sample.db");
+builder.Services.AddSqlite<SampleContext>("Data Source=sample.db");
 
 var app = builder.Build();
 
@@ -27,7 +27,7 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
+// app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
 
 // Initialize the database
 // var scopeFactory = app.Services.GetRequiredService<IServiceScopeFactory>();

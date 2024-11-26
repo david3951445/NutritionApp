@@ -82,7 +82,7 @@ else
             分析項: null
         );
 
-        Samples = Sample.ConvertToSamples(response).ToList();
+        Samples = SampleService.ConvertToSamples(response).ToList();
 
         IsLoading = false;
     }
