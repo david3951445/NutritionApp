@@ -1,4 +1,4 @@
-﻿@page "/samples"
+﻿@page "/sample-list"
 @inject NavigationManager NavigationManager
 @using NutritionApp.Models
 @using NutritionApp.Services
@@ -56,10 +56,10 @@ else
 @code {
     private string? SampleName { get; set; }
     private string? CommonName { get; set; }
-    private int? Limit { get; set; } = 100;
+    private int? Limit { get; set; } = 2;
     private bool IsLoading { get; set; }
 
-    private List<SampleData> Samples { get; set; } = new();
+    private List<Sample> Samples { get; set; } = new();
 
     private async Task FetchData()
     {
@@ -82,18 +82,7 @@ else
             分析項: null
         );
 
-        Samples = response
-            .GroupBy(row => row.整合編號) // 依據整合編號分組
-            .Select((group, index) => new SampleData
-                {
-                    // 項次 = index + 1,
-                    整合編號 = group.Key,
-                    樣品名稱 = group.First().樣品名稱,
-                    俗名 = group.First().俗名,
-                    樣品英文名稱 = group.First().樣品英文名稱,
-                    內容物描述 = group.First().內容物描述
-                })
-            .ToList();
+        Samples = Sample.ConvertToSamples(response).ToList();
 
         IsLoading = false;
     }

@@ -1,22 +1,23 @@
 ﻿@page "/sample-details/{IntegrationId}"
 @using NutritionApp.Models
 @inject NavigationManager NavigationManager
-@inject IHttpClientFactory HttpClientFactory
+@inject HttpClient HttpClient
 
 <h3>Sample Details</h3>
 
 @if (Sample != null)
 {
-	<dl>
-		<dt>分析項分類</dt>
-		<dd>@Sample.NutritionalFact.分析項分類</dd>
-		<dt>分析項</dt>
-		<dd>@Sample.NutritionalFact.分析項</dd>
-		<dt>單位</dt>
-		<dd>@Sample.NutritionalFact.單位</dd>
-		<dt>每100克含量</dt>
-		<dd>@Sample.NutritionalFact.每100克含量</dd>
-	</dl>
+	@for (var i = 0; i < Sample.AnalysisItemCatagories.Length; i++)
+	{
+		var item = Sample.AnalysisItemCatagories[i];
+		<tr>
+			<td>@i</td>
+			<td>@item.分析項分類</td>
+			<td>@item.AnalysisItem.分析項</td>
+			<td>@item.AnalysisItem.單位</td>
+			<td>@item.AnalysisItem.每100克含量</td>
+		</tr>
+	}
 	<button @onclick="GoBack">Back to List</button>
 }
 else if (IsLoading)
@@ -31,13 +32,13 @@ else
 @code {
 	[Parameter] public string IntegrationId { get; set; }
 
-	private SampleData Sample { get; set; }
+	private Sample Sample { get; set; }
 	private bool IsLoading { get; set; } = true;
 
 	protected override async Task OnInitializedAsync()
 	{
-		var httpClient = HttpClientFactory.CreateClient();
-		var response = await httpClient.GetFromJsonAsync<List<SampleData>>("/samples"); // 注意這裡是相對路徑
+		string uri = NavigationManager.BaseUri + "sample-list";
+		var response = await HttpClient.GetFromJsonAsync<List<Sample>>(uri); // 注意這裡是相對路徑
 		Sample = response?.FirstOrDefault();
 
 		IsLoading = false;

@@ -1,13 +1,13 @@
 ﻿using NutritionApp.Components;
+using NutritionApp.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-
-// 添加 HttpClient 支援
 builder.Services.AddHttpClient();
+builder.Services.AddSqlite<SampleStoreContext>("Data Source=sample.db");
 
 var app = builder.Build();
 
@@ -27,5 +27,17 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
+
+// Initialize the database
+// var scopeFactory = app.Services.GetRequiredService<IServiceScopeFactory>();
+// using (var scope = scopeFactory.CreateScope())
+// {
+//     var db = scope.ServiceProvider.GetRequiredService<SampleStoreContext>();
+//     if (db.Database.EnsureCreated())
+//     {
+//         SeedData.Initialize(db);
+//     }
+// }
 
 app.Run();
