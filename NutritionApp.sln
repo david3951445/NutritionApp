@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NutritionApp", "NutritionAp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleDatabaseBuilder", "SampleDatabaseBuilder\SampleDatabaseBuilder.csproj", "{6C01AFC6-B036-4048-AD9A-FA0E7961B94D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UtilsLibrary", "Utils\UtilsLibrary.csproj", "{01AD5904-5AB8-449E-8CBD-8D92EC95EA4E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{6C01AFC6-B036-4048-AD9A-FA0E7961B94D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6C01AFC6-B036-4048-AD9A-FA0E7961B94D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6C01AFC6-B036-4048-AD9A-FA0E7961B94D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{01AD5904-5AB8-449E-8CBD-8D92EC95EA4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{01AD5904-5AB8-449E-8CBD-8D92EC95EA4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{01AD5904-5AB8-449E-8CBD-8D92EC95EA4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{01AD5904-5AB8-449E-8CBD-8D92EC95EA4E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

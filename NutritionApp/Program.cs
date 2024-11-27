@@ -1,5 +1,4 @@
 ﻿using NutritionApp.Components;
-using NutritionApp.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddHttpClient();
-builder.Services.AddSqlite<SampleContext>("Data Source=sample.db");
+builder.Services.AddSqlite<SamplesContext>("Data Source=sample.db");
 
 var app = builder.Build();
 

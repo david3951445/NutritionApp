@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using NutritionApp.Models;
 
 namespace NutritionApp.Controllers;
 
@@ -8,9 +7,9 @@ namespace NutritionApp.Controllers;
 [ApiController]
 public class SamplesController : Controller
 {
-    private readonly SampleContext _db;
+    private readonly SamplesContext _db;
 
-    public SamplesController(SampleContext db)
+    public SamplesController(SamplesContext db)
     {
         _db = db;
     }

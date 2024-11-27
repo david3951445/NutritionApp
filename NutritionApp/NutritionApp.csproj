@@ -8,6 +8,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.ApiDescription.Client" Version="7.0.2">
       <PrivateAssets>all</PrivateAssets>
@@ -22,9 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <OpenApiReference Include="OpenAPIs\exportDataList.do" CodeGenerator="NSwagCSharp" Namespace="NutritionApp.Services" ClassName="FdaNutritionDatabaseClient" Options="/GenerateClientInterfaces:true">
-      <SourceUri>https://data.fda.gov.tw/opendata/exportDataList.do?method=openDataApi&amp;InfoId=20</SourceUri>
-    </OpenApiReference>
+    <ProjectReference Include="..\SampleDatabaseBuilder\SampleDatabaseBuilder.csproj" />
+    <ProjectReference Include="..\Utils\UtilsLibrary.csproj" />
   </ItemGroup>
 
 </Project>

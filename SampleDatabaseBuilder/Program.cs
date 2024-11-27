@@ -1,9 +1,9 @@
 ﻿using System.Text.Json;
-using NutritionApp.Models;
-using NutritionApp.Services;
+using UtilsLibrary;
+using SampleDatabaseBuilder.Services;
 
 Console.WriteLine("Construct file path...");
-string folderPath = Path.Join(SampleService.SolutionPath, "FdaNutritionData");
+string folderPath = Path.Join(Utils.SolutionPath, "FdaNutritionData");
 string inputFilePath = Path.Join(folderPath, "20_5.json");
 string outputFilePath = Path.Join(folderPath, "20_5_output.json");
 
@@ -13,7 +13,7 @@ var objects = JsonSerializer.Deserialize<RowData[]>(json);
 var samples = SampleService.ConvertToSamples(objects);
 
 Console.WriteLine("Write to database...");
-using (var db = new SampleContext())
+using (var db = new SamplesContext())
 {
     foreach (var sample in samples)
         db.Add(sample);
@@ -30,24 +30,3 @@ using (var db = new SampleContext())
 // File.WriteAllText(outputFilePath, outputJson);
 
 Console.WriteLine("Convert complete.");
-
-// class Data
-// {
-//     public string 每單位重含量 { get; set; }
-//     public string 整合編號 { get; set; }
-//     public string 分析項分類 { get; set; }
-//     public string 樣品名稱 { get; set; }
-//     public string 每100克含量 { get; set; }
-//     public string 每單位含量 { get; set; }
-//     public string 標準差 { get; set; }
-//     public string 每單位重 { get; set; }
-//     public string 含量單位 { get; set; }
-//     public string 樣本數 { get; set; }
-//     public string 廢棄率 { get; set; }
-//     public string 樣品英文名稱 { get; set; }
-//     public string 資料類別 { get; set; }
-//     public string 分析項 { get; set; }
-//     public string 食品分類 { get; set; }
-//     public string 內容物描述 { get; set; }
-//     public string 俗名 { get; set; }
-// }

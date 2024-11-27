@@ -8,7 +8,42 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NutritionApp\NutritionApp.csproj" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Client" Version="7.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="NSwag.ApiDescription.Client" Version="13.18.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
+
+  <ItemGroup>
+    <OpenApiReference Include="OpenAPIs\FdaOpenAPI.json" CodeGenerator="NSwagCSharp"
+      Namespace="SampleDatabaseBuilder.Services" Options="/GenerateClientInterfaces:true"
+      ClassName="FdaNutritionDatabaseClient">
+      <SourceUri>https://data.fda.gov.tw/opendata/exportDataList.do?method=openDataApi&amp;InfoId=20</SourceUri>
+      <OutputPath>../OpenAPIs/FdaNutritionDatabaseClient.cs</OutputPath>
+    </OpenApiReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Utils\UtilsLibrary.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="OpenAPIs\exportDataList1.do" ClassName="FdaNutritionDatabaseClient" />
+  </ItemGroup>
+
+  <Target Name="PostClean" AfterTargets="Clean">
+    <RemoveDir Directories="$(BaseIntermediateOutputPath)" /> <!-- obj -->
+    <RemoveDir Directories="$(BaseOutputPath)" /> <!-- bin -->
+  </Target>
 
 </Project>
