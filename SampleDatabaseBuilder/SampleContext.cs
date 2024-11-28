@@ -6,13 +6,15 @@ public class SamplesContext : DbContext
     public DbSet<Sample> Samples { get; set; }
     public string DbPath { get; }
 
-    public SamplesContext()
+    public SamplesContext() : this(new DbContextOptions<SamplesContext>()) { }
+
+    public SamplesContext(DbContextOptions<SamplesContext> options) : base(options)
     {
         string folderPath = Path.Join(Utils.SolutionPath, "FdaNutritionData");
         DbPath = Path.Join(folderPath, "Samples.db");
+        if (!File.Exists(DbPath))
+            throw new FileNotFoundException($"The database at {DbPath} does not exist.", DbPath);
     }
-
-    public SamplesContext(DbContextOptions<SamplesContext> options) : base(options) { }
 
     /// <summary>
     /// The following configures EF to create a Sqlite database file.
@@ -21,37 +23,73 @@ public class SamplesContext : DbContext
         => options.UseSqlite($"Data Source={DbPath}");
 }
 
-public record Sample
+public class Sample
 {
-    public int SampleId { get; set;}
-    public string 整合編號 { get; set; }
-    public string 樣品名稱 { get; set; }
-    public string 俗名 { get; set; }
-    public string 樣品英文名稱 { get; set; }
-    public string 內容物描述 { get; set; }
+    /// <summary>
+    /// 整合編號
+    /// </summary>
+    public string SampleId { get; set; }
+    /// <summary>
+    /// 樣品名稱
+    /// </summary>
+    public string Name { get; set; }
+    /// <summary>
+    /// 俗名
+    /// </summary>
+    public string CommonName { get; set; }
+    /// <summary>
+    /// /// 樣品英文名稱
+    /// </summary>
+    public string EnglishName { get; set; }
+    /// <summary>
+    /// 內容物描述
+    /// </summary>
+    public string ContentDescription { get; set; }
+    /// <summary>
+    /// 食品分類
+    /// </summary>
+    public string FoodCatagory { get; set; }
 
-    public ICollection<AnalysisItemCatagory> AnalysisItemCatagories { get; init; }
+    public ICollection<AnalysisItemCatagory> AnalysisItemCatagories { get; set; }
 }
 
-public record AnalysisItemCatagory
+public class AnalysisItemCatagory
 {
     public int AnalysisItemCatagoryId { get; set; }
-    public string 分析項分類 { get; set; }
+    /// <summary>
+    /// 分析項分類
+    /// </summary>
+    public string Name { get; set; }
 
-    public int SampleId { get; set;}
+    public string SampleId { get; set; }
     public Sample Sample { get; set; }
-
     public ICollection<AnalysisItem> AnalysisItems { get; set; }
 }
 
-public record AnalysisItem
+public class AnalysisItem
 {
     public int AnalysisItemId { get; set; }
-    public string 分析項 { get; set; }
-    public string 單位 { get; set; }
-    public string 每100克含量 { get; set; }
-    //每單位重(0.0克)含量x1
+    /// <summary>
+    /// 分析項
+    /// </summary>
+    public string Name { get; set; }
+    /// <summary>
+    /// 含量單位
+    /// </summary>
+    public string Unit { get; set; }
+    /// <summary>
+    /// 每100克含量
+    /// </summary>
+    public string Value { get; set; }
+    // 每單位重
+    // 每單位重(0.0克)含量x1
 
     public int AnalysisItemCatagoryId { get; set; }
     public AnalysisItemCatagory AnalysisItemCatagory { get; set; }
+}
+
+public class FoodCatagory
+{
+    public string FoodCatagoryId { get; set; }
+    public string Name { get; set; }
 }

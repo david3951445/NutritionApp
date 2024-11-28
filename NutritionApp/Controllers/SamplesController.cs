@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace NutritionApp.Controllers;
 
-[Route("specials")]
+[Route("samples")]
 [ApiController]
 public class SamplesController : Controller
 {
@@ -15,7 +15,7 @@ public class SamplesController : Controller
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<Sample>>> GetSpecials()
+    public async Task<ActionResult<List<Sample>>> GetSamaples()
     {
         return (await _db.Samples.ToListAsync()).ToList();
     }

@@ -1,4 +1,5 @@
-﻿using NutritionApp.Components;
+﻿using Microsoft.EntityFrameworkCore;
+using NutritionApp.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,7 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddHttpClient();
-builder.Services.AddSqlite<SamplesContext>("Data Source=sample.db");
+builder.Services.AddDbContextFactory<SamplesContext>();
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
@@ -26,7 +28,7 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-// app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
+app.MapDefaultControllerRoute();
 
 // Initialize the database
 // var scopeFactory = app.Services.GetRequiredService<IServiceScopeFactory>();

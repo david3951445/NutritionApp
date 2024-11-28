@@ -1,14 +1,21 @@
 ﻿@page "/sample-details/{IntegrationId}"
 @inject NavigationManager NavigationManager
-@inject HttpClient HttpClient
+@inject IDbContextFactory<SamplesContext> DbFactory
+@* @inject HttpClient HttpClient *@
 
 <h3>Sample Details</h3>
 
 @if (Sample != null)
 {
 	var analysisItems = Sample.AnalysisItemCatagories
-		.SelectMany(x => x.AnalysisItems.Select(i => new {x.分析項分類, i.分析項, i.單位, i.每100克含量}))
-		.ToArray();
+	.SelectMany(x => x.AnalysisItems.Select(i => new
+	{
+		分析項分類 = x.Name,
+		分析項 = i.Name,
+		單位 = i.Unit,
+		每100克含量 = i.Value
+	}))
+	.ToArray();
 	@for (var i = 0; i < analysisItems.Length; i++)
 	{
 		var item = analysisItems[i];
@@ -39,9 +46,12 @@ else
 
 	protected override async Task OnInitializedAsync()
 	{
-		string uri = NavigationManager.BaseUri + "sample-list";
-		var response = await HttpClient.GetFromJsonAsync<List<Sample>>(uri); // 注意這裡是相對路徑
-		Sample = response?.FirstOrDefault();
+		// string uri = NavigationManager.BaseUri + "samples";
+		// var response = await HttpClient.GetFromJsonAsync<List<Sample>>(uri); // 注意這裡是相對路徑
+		// Sample = response?.FirstOrDefault();
+
+		using var context = DbFactory.CreateDbContext();
+		Sample = await context.Samples.Find(IntegrationId);
 
 		IsLoading = false;
 	}

@@ -1,16 +1,18 @@
 ﻿@page "/sample-list"
 @inject NavigationManager NavigationManager
+@inject IDbContextFactory<SamplesContext> DbFactory
 @using SampleDatabaseBuilder.Services
+@using Microsoft.EntityFrameworkCore;
 
 <h3>Sample List</h3>
 
 <div>
     <label for="sampleName">樣品名稱：</label>
-    <InputText id="sampleName" @bind-Value="SampleName" placeholder="請輸入樣品名稱..." />
+    <InputText id="sampleName" @bind-Value="SampleName" @onkeydown="HandleKeyDown" placeholder="請輸入樣品名稱..." />
 </div>
 <div>
     <label for="commonName">俗名：</label>
-    <InputText id="commonName" @bind-Value="CommonName" placeholder="請輸入俗名..." />
+    <InputText id="commonName" @bind-Value="CommonName" @onkeydown="HandleKeyDown" placeholder="請輸入俗名..." />
 </div>
 <button @onclick="FetchData">Search</button>
 
@@ -31,13 +33,13 @@
             @for (var i = 0; i < Samples.Count; i++)
             {
                 var sample = Samples[i];
-                <tr @onclick="() => ShowDetails(sample.整合編號)" style="cursor: pointer;">
+                <tr @onclick="() => ShowDetails(sample.SampleId)" style="cursor: pointer;">
                     <td>@i</td>
-                    <td>@sample.整合編號</td>
-                    <td>@sample.樣品名稱</td>
-                    <td>@sample.俗名</td>
-                    <td>@sample.樣品英文名稱</td>
-                    <td>@sample.內容物描述</td>
+                    <td>@sample.SampleId</td>
+                    <td>@sample.Name</td>
+                    <td>@sample.CommonName</td>
+                    <td>@sample.EnglishName</td>
+                    <td>@sample.ContentDescription</td>
                 </tr>
             }
         </tbody>
@@ -62,8 +64,30 @@ else
 
     private async Task FetchData()
     {
-        IsLoading = true;
+        if (IsLoading)
+            return;
 
+        try
+        {
+            IsLoading = true;
+            Samples = await GetSamplesFromDb();
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task<List<Sample>> GetSamplesFromDb()
+    {
+        using var context = DbFactory.CreateDbContext();
+        return await context.Samples
+            .Where(s => s.Name.Contains(SampleName))
+            .ToListAsync();
+    }
+
+    private async Task<List<Sample>> GetSamplesFromHttp()
+    {
         // Call the API using the generated API client
         using var httpClient = new HttpClient();
         var apiClient = new FdaNutritionDatabaseClient(httpClient);
@@ -81,9 +105,7 @@ else
             分析項: null
         );
 
-        Samples = SampleService.ConvertToSamples(response).ToList();
-
-        IsLoading = false;
+        return SampleService.ConvertToSamples(response).ToList();
     }
 
     private void ShowDetails(string integrationId)
