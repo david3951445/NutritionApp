@@ -14,19 +14,23 @@ public class SampleService
             EnglishName = first.樣品英文名稱,
             ContentDescription = first.內容物描述,
             FoodCatagory = first.食品分類,
-            AnalysisItemCatagories =
-                (from row in grouped
-                 group row by row.分析項分類 into groupedItemCatagory
-                 select new AnalysisItemCatagory
-                 {
-                     Name = groupedItemCatagory.Key,
-                     AnalysisItems = groupedItemCatagory
-                         .Select(c => new AnalysisItem
-                         {
-                             Name = c.分析項,
-                             Unit = c.含量單位,
-                             Value = c.每100克含量
-                         }).ToList()
-                 }).ToList()
+            // AnalysisItemCatagories =
+            //     (from row in grouped
+            //      group row by row.分析項分類 into groupedItemCatagory
+            //      select new AnalysisItemCatagory
+            //      {
+            //          Name = groupedItemCatagory.Key,
+            //          AnalysisItems = groupedItemCatagory
+            //              .Select(c => new AnalysisItem
+            //              {
+            //                  AnalysisItemInfo = new AnalysisItemInfo
+            //                  {
+            //                      Name = c.分析項,
+            //                      Unit = EnumExtensions.ParseOrDefault<Unit>(c.含量單位)
+            //                  },
+            //                  Value = c.每100克含量
+            //              }).ToList()
+            //      }).ToList()
         };
+
 }

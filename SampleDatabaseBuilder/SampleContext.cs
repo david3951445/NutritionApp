@@ -1,9 +1,12 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using UtilsLibrary;
 
 public class SamplesContext : DbContext
 {
     public DbSet<Sample> Samples { get; set; }
+    public DbSet<AnalysisItemCatagoryInfo> AnalysisItemCatagoryInfos { get; set; }
+    public DbSet<AnalysisItemInfo> AnalysisItemInfos { get; set; }
     public string DbPath { get; }
 
     public SamplesContext() : this(new DbContextOptions<SamplesContext>()) { }
@@ -12,8 +15,8 @@ public class SamplesContext : DbContext
     {
         string folderPath = Path.Join(Utils.SolutionPath, "FdaNutritionData");
         DbPath = Path.Join(folderPath, "Samples.db");
-        if (!File.Exists(DbPath))
-            throw new FileNotFoundException($"The database at {DbPath} does not exist.", DbPath);
+        // if (!File.Exists(DbPath))
+        //     throw new FileNotFoundException($"The database at {DbPath} does not exist.", DbPath);
     }
 
     /// <summary>
@@ -50,42 +53,32 @@ public class Sample
     /// </summary>
     public string FoodCatagory { get; set; }
 
-    public ICollection<AnalysisItemCatagory> AnalysisItemCatagories { get; set; }
-}
-
-public class AnalysisItemCatagory
-{
-    public int AnalysisItemCatagoryId { get; set; }
-    /// <summary>
-    /// 分析項分類
-    /// </summary>
-    public string Name { get; set; }
-
-    public string SampleId { get; set; }
-    public Sample Sample { get; set; }
     public ICollection<AnalysisItem> AnalysisItems { get; set; }
 }
 
+// public class AnalysisItemCatagory
+// {
+//     public int AnalysisItemCatagoryId { get; set; }
+//     /// <summary>
+//     /// 分析項分類
+//     /// </summary>
+//     public string Name { get; set; }
+
+//     public ICollection<AnalysisItem> AnalysisItems { get; set; }
+// }
+
 public class AnalysisItem
 {
-    public int AnalysisItemId { get; set; }
-    /// <summary>
-    /// 分析項
-    /// </summary>
-    public string Name { get; set; }
-    /// <summary>
-    /// 含量單位
-    /// </summary>
-    public string Unit { get; set; }
-    /// <summary>
-    /// 每100克含量
-    /// </summary>
+    public int Id { get; set; }
+    [Display(Name = "每100g含量")]
     public string Value { get; set; }
     // 每單位重
     // 每單位重(0.0克)含量x1
 
-    public int AnalysisItemCatagoryId { get; set; }
-    public AnalysisItemCatagory AnalysisItemCatagory { get; set; }
+    public int AnalysisItemInfoId { get; set; }
+    public AnalysisItemInfo AnalysisItemInfo { get; set; }
+    public string SampleId { get; set; }
+    public Sample Sample { get; set; }
 }
 
 public class FoodCatagory
