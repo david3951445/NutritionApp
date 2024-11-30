@@ -64,12 +64,8 @@ void Create1(SamplesContext context, IEnumerable<RowData> rowDatas)
 
 void Create2(SamplesContext context, IEnumerable<RowData> rowDatas)
 {
-    var firstGroup =
-        (from rowData in rowDatas
-         group rowData by rowData.整合編號 into grouped
-         select grouped).First();
-    var AnalysisItemCatagoryInfos =
-        (from row in firstGroup
+    var analysisItemCatagoryInfos =
+        (from row in rowDatas.GroupBy(x => x.整合編號).First()
          group row by row.分析項分類 into grouped
          select new AnalysisItemCatagoryInfo
          {
@@ -82,44 +78,83 @@ void Create2(SamplesContext context, IEnumerable<RowData> rowDatas)
                       Unit = EnumExtensions.ParseOrDefault<Unit>(catagoryRow.含量單位)
                   }).ToArray()
          }).ToArray();
-    // AnalysisItemInfo[] generalIngredients =
-    // {
-    //     new() { Name = "熱量", Unit = Unit.kcal },
-    //     new() { Name = "修正熱量", Unit = Unit.kcal },
-    //     new() { Name = "水分", Unit = Unit.g },
-    //     new() { Name = "粗蛋白", Unit = Unit.g },
-    //     new() { Name = "粗脂肪", Unit = Unit.g },
-    //     new() { Name = "飽和脂肪", Unit = Unit.g },
-    //     new() { Name = "灰分", Unit = Unit.g },
-    //     new() { Name = "總碳水化合物", Unit = Unit.g },
-    //     new() { Name = "膳食纖維", Unit = Unit.g },
-    // };
-    // AnalysisItemInfo[] sugarAnalysis =
-    // {
-    //     new() { Name = "糖質總量", Unit = Unit.g },
-    //     new() { Name = "葡萄糖", Unit = Unit.g },
-    //     new() { Name = "果糖", Unit = Unit.g },
-    //     new() { Name = "半乳糖", Unit = Unit.g },
-    //     new() { Name = "麥芽糖", Unit = Unit.g },
-    //     new() { Name = "蔗糖", Unit = Unit.g },
-    //     new() { Name = "乳糖", Unit = Unit.g },
-    // };
+    context.AddRange(analysisItemCatagoryInfos);
 
-    // AnalysisItemCatagoryInfo[] analysisItemCatagoryInfos =
-    // {
-    //     new() { Name = "一般成分", AnalysisItemInfos = generalIngredients },
-    //     new() { Name = "糖質分析", AnalysisItemInfos = sugarAnalysis },
-    //     new() { Name = "礦物質"},
-    //     new() { Name = "維生素A"},
-    //     new() { Name = "維生素D"},
-    //     new() { Name = "維生素E"},
-    //     new() { Name = "維生素K"},
-    //     new() { Name = "維生素K"},
-    //     new() { Name = "維生素B群 & C"},
-    //     new() { Name = "胺基酸組成"},
-    //     new() { Name = "脂肪酸組成"},
-    //     new() { Name = "其他"},
-    // };
+    var foodCatagory =
+        (from row in rowDatas
+         group row by row.食品分類 into grouped
+         let first = grouped.First()
+         select new FoodCatagory
+         {
+             Id = first.整合編號[..1],
+             Name = first.食品分類,
+         }).ToArray();
+    context.AddRange(foodCatagory);
 
-    // context.AddRange(analysisItemCatagoryInfos);
+    var samples =
+        (from row in rowDatas
+         group row by row.整合編號 into grouped
+         let first = grouped.First()
+         select new Sample
+         {
+             SampleId = grouped.Key,
+             Name = first.樣品名稱,
+             CommonName = first.俗名,
+             EnglishName = first.樣品英文名稱,
+             ContentDescription = first.內容物描述,
+             FoodCatagory = foodCatagory.First(x => x.Name == first.食品分類),
+             AnalysisItems =
+                 (from sampleRow in grouped
+                  select new AnalysisItem
+                  {
+                      Value = sampleRow.每100克含量,
+                      AnalysisItemInfo = analysisItemCatagoryInfos
+                         .First(x => x.Name == sampleRow.分析項分類).AnalysisItemInfos
+                         .First(info => info.Name == sampleRow.分析項),
+                      SampleId = grouped.Key
+                  }).ToArray()
+         }).ToArray();
+    context.AddRange(samples);
 }
+
+// void CreateAnalysisItems()
+// {
+// AnalysisItemInfo[] generalIngredients =
+// {
+//     new() { Name = "熱量", Unit = Unit.kcal },
+//     new() { Name = "修正熱量", Unit = Unit.kcal },
+//     new() { Name = "水分", Unit = Unit.g },
+//     new() { Name = "粗蛋白", Unit = Unit.g },
+//     new() { Name = "粗脂肪", Unit = Unit.g },
+//     new() { Name = "飽和脂肪", Unit = Unit.g },
+//     new() { Name = "灰分", Unit = Unit.g },
+//     new() { Name = "總碳水化合物", Unit = Unit.g },
+//     new() { Name = "膳食纖維", Unit = Unit.g },
+// };
+// AnalysisItemInfo[] sugarAnalysis =
+// {
+//     new() { Name = "糖質總量", Unit = Unit.g },
+//     new() { Name = "葡萄糖", Unit = Unit.g },
+//     new() { Name = "果糖", Unit = Unit.g },
+//     new() { Name = "半乳糖", Unit = Unit.g },
+//     new() { Name = "麥芽糖", Unit = Unit.g },
+//     new() { Name = "蔗糖", Unit = Unit.g },
+//     new() { Name = "乳糖", Unit = Unit.g },
+// };
+// ...
+// AnalysisItemCatagoryInfo[] analysisItemCatagoryInfos =
+// {
+//     new() { Name = "一般成分", AnalysisItemInfos = generalIngredients },
+//     new() { Name = "糖質分析", AnalysisItemInfos = sugarAnalysis },
+//     new() { Name = "礦物質"},
+//     new() { Name = "維生素A"},
+//     new() { Name = "維生素D"},
+//     new() { Name = "維生素E"},
+//     new() { Name = "維生素K"},
+//     new() { Name = "維生素K"},
+//     new() { Name = "維生素B群 & C"},
+//     new() { Name = "胺基酸組成"},
+//     new() { Name = "脂肪酸組成"},
+//     new() { Name = "其他"},
+// };
+// }

@@ -19,7 +19,7 @@ public class Utils
 
 public static class EnumExtensions
 {
-    public static T ParseOrDefault<T>(string input) where T : struct
+    public static T ParseOrDefault<T>(string? input) where T : struct
     {
         // Try parsing directly by enum name
         if (Enum.TryParse(input, true, out T result))
@@ -28,15 +28,27 @@ public static class EnumExtensions
         // Fallback to checking descriptions
         foreach (var field in typeof(T).GetFields())
         {
-            var attribute = (DescriptionAttribute)field
+            var attribute = (DescriptionAttribute?)field
                 .GetCustomAttributes(typeof(DescriptionAttribute), false)
                 .FirstOrDefault();
 
-            if (attribute != null && attribute.Description == input)
-                return (T)field.GetValue(null);
+            if (attribute?.Description == input)
+            {
+                var fieldValue = field.GetValue(null);
+                return fieldValue == null ? default : (T)fieldValue;
+            }
         }
 
         // Return the default value
         return default;
+    }
+
+    public static string? GetDescription(this Enum value)
+    {
+        var field = value.GetType().GetField(value.ToString());
+        var attribute = field?.GetCustomAttributes(typeof(DescriptionAttribute), false)
+                              .FirstOrDefault() as DescriptionAttribute;
+
+        return attribute?.Description ?? value.ToString(); // Fallback to enum name if no description
     }
 }

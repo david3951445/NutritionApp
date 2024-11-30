@@ -13,7 +13,7 @@ public class SampleService
             CommonName = first.俗名,
             EnglishName = first.樣品英文名稱,
             ContentDescription = first.內容物描述,
-            FoodCatagory = first.食品分類,
+            // FoodCatagory = first.食品分類,
             // AnalysisItemCatagories =
             //     (from row in grouped
             //      group row by row.分析項分類 into groupedItemCatagory

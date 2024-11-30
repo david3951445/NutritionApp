@@ -1,12 +1,16 @@
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using UtilsLibrary;
 
 public class SamplesContext : DbContext
 {
     public DbSet<Sample> Samples { get; set; }
+    public DbSet<AnalysisItem> AnalysisItems { get; set; }
     public DbSet<AnalysisItemCatagoryInfo> AnalysisItemCatagoryInfos { get; set; }
     public DbSet<AnalysisItemInfo> AnalysisItemInfos { get; set; }
+    public DbSet<FoodCatagory> FoodCatagories { get; set; }
     public string DbPath { get; }
 
     public SamplesContext() : this(new DbContextOptions<SamplesContext>()) { }
@@ -22,8 +26,21 @@ public class SamplesContext : DbContext
     /// <summary>
     /// The following configures EF to create a Sqlite database file.
     /// </summary>
-    protected override void OnConfiguring(DbContextOptionsBuilder options)
-        => options.UseSqlite($"Data Source={DbPath}");
+    protected override void OnConfiguring(DbContextOptionsBuilder options) => options
+        .UseSqlite($"Data Source={DbPath}")
+        .EnableSensitiveDataLogging();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        var converter = new ValueConverter<Unit, string>(
+            v => v.GetDescription() ?? v.ToString(),
+            v => EnumExtensions.ParseOrDefault<Unit>(v));
+
+        modelBuilder
+            .Entity<AnalysisItemInfo>()
+            .Property(e => e.Unit)
+            .HasConversion(converter);
+    }
 }
 
 public class Sample
@@ -48,11 +65,12 @@ public class Sample
     /// 內容物描述
     /// </summary>
     public string ContentDescription { get; set; }
+
+    public string FoodCatagoryId { get; set; }
     /// <summary>
     /// 食品分類
     /// </summary>
-    public string FoodCatagory { get; set; }
-
+    public FoodCatagory FoodCatagory { get; set; }
     public ICollection<AnalysisItem> AnalysisItems { get; set; }
 }
 
@@ -75,7 +93,7 @@ public class AnalysisItem
     // 每單位重
     // 每單位重(0.0克)含量x1
 
-    public int AnalysisItemInfoId { get; set; }
+    // public int AnalysisItemInfoId { get; set; }
     public AnalysisItemInfo AnalysisItemInfo { get; set; }
     public string SampleId { get; set; }
     public Sample Sample { get; set; }
@@ -83,6 +101,6 @@ public class AnalysisItem
 
 public class FoodCatagory
 {
-    public string FoodCatagoryId { get; set; }
+    public string Id { get; set; }
     public string Name { get; set; }
 }
