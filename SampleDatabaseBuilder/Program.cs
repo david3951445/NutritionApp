@@ -44,7 +44,7 @@ void Create1(SamplesContext context, IEnumerable<RowData> rowDatas)
     var samples = SampleService.ConvertToSamples(rowDatas);
 
     Console.WriteLine("Detect whether there exist duplicated samples...");
-    var duplicatedSamples = samples.GroupBy(s => s.SampleId)
+    var duplicatedSamples = samples.GroupBy(s => s.Id)
         .Where(g => g.Count() > 1)
         .Select(g => g.Key)
         .ToList();
@@ -97,7 +97,7 @@ void Create2(SamplesContext context, IEnumerable<RowData> rowDatas)
          let first = grouped.First()
          select new Sample
          {
-             SampleId = grouped.Key,
+             Id = grouped.Key,
              Name = first.樣品名稱,
              CommonName = first.俗名,
              EnglishName = first.樣品英文名稱,

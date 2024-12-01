@@ -8,7 +8,7 @@ public class SampleService
         let first = grouped.First()
         select new Sample
         {
-            SampleId = grouped.Key,
+            Id = grouped.Key,
             Name = first.樣品名稱,
             CommonName = first.俗名,
             EnglishName = first.樣品英文名稱,

@@ -48,7 +48,7 @@ public class Sample
     /// <summary>
     /// 整合編號
     /// </summary>
-    public string SampleId { get; set; }
+    public string Id { get; set; }
     /// <summary>
     /// 樣品名稱
     /// </summary>

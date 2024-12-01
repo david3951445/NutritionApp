@@ -14,7 +14,11 @@
     <label for="commonName">俗名：</label>
     <InputText id="commonName" @bind-Value="CommonName" @onkeydown="HandleKeyDown" placeholder="請輸入俗名..." />
 </div>
-<button @onclick="FetchData">Search</button>
+<div>
+    <label for="catagory">食品分類：</label>
+    <InputText id="catagory" @bind-Value="Catagory" @onkeydown="HandleKeyDown" placeholder="請輸入食品分類..." />
+</div>
+<button @onclick="FetchData" disabled="@IsLoading">Search</button>
 
 @if (Samples.Any())
 {
@@ -27,19 +31,21 @@
                 <th>俗名</th>
                 <th>樣品英文名稱</th>
                 <th>內容物描述</th>
+                <th>食品分類</th>
             </tr>
         </thead>
         <tbody>
             @for (var i = 0; i < Samples.Count; i++)
             {
                 var sample = Samples[i];
-                <tr @onclick="() => ShowDetails(sample.SampleId)" style="cursor: pointer;">
+                <tr @onclick="() => ShowDetails(sample.Id)" style="cursor: pointer;">
                     <td>@i</td>
-                    <td>@sample.SampleId</td>
+                    <td>@sample.Id</td>
                     <td>@sample.Name</td>
                     <td>@sample.CommonName</td>
                     <td>@sample.EnglishName</td>
                     <td>@sample.ContentDescription</td>
+                    <td>@sample.FoodCatagory.Name</td>
                 </tr>
             }
         </tbody>
@@ -57,6 +63,7 @@ else
 @code {
     private string? SampleName { get; set; }
     private string? CommonName { get; set; }
+    private string? Catagory { get; set; }
     private int? Limit { get; set; } = 2;
     private bool IsLoading { get; set; }
 
@@ -82,8 +89,9 @@ else
     {
         using var context = DbFactory.CreateDbContext();
         return await context.Samples
-            .Where(s => s.Name.Contains(SampleName))
-            .ToListAsync();
+        .Where(s => s.Name.Contains(SampleName))
+        .Include(s => s.FoodCatagory)
+        .ToListAsync();
     }
 
     private async Task<List<Sample>> GetSamplesFromHttp()
@@ -92,17 +100,17 @@ else
         using var httpClient = new HttpClient();
         var apiClient = new FdaNutritionDatabaseClient(httpClient);
         var response = await apiClient.ActivityGetAsync(
-            method: Method.OpenData,
-            infoId: InfoId._20,
-            offset: null,
-            limit: Limit,
-            sort: Sort.整合編號,
-            食品分類: null,
-            樣品名稱: SampleName,
-            俗名: CommonName,
-            樣品英文名稱: null,
-            分析項分類: null,
-            分析項: null
+        method: Method.OpenData,
+        infoId: InfoId._20,
+        offset: null,
+        limit: Limit,
+        sort: Sort.整合編號,
+        食品分類: Catagory,
+        樣品名稱: SampleName,
+        俗名: CommonName,
+        樣品英文名稱: null,
+        分析項分類: null,
+        分析項: null
         );
 
         return SampleService.ConvertToSamples(response).ToList();

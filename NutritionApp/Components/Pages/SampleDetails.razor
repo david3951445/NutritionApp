@@ -2,33 +2,46 @@
 @using Microsoft.EntityFrameworkCore
 @inject NavigationManager NavigationManager
 @inject IDbContextFactory<SamplesContext> DbFactory
-@* @inject HttpClient HttpClient *@
 
-<h3>Sample Details</h3>
+<h1>Sample Details</h1>
 
 @if (Sample != null)
 {
-	var analysisItems = Sample.AnalysisItemCatagories
-	.SelectMany(x => x.AnalysisItems.Select(i => new
+	<div>
+		<h3>General Information</h3>
+		<p><strong>整合編號:</strong> @Sample.Id</p>
+		<p><strong>樣品名稱:</strong> @Sample.Name</p>
+		<p><strong>俗名:</strong> @Sample.CommonName</p>
+		<p><strong>樣品英文名稱:</strong> @Sample.EnglishName</p>
+		<p><strong>內容物描述:</strong> @Sample.ContentDescription</p>
+		<p><strong>食品分類:</strong> @Sample.FoodCatagory.Name</p>
+	</div>
+
+	@if (Items != null)
 	{
-		分析項分類 = x.Name,
-		分析項 = i.Name,
-		單位 = i.Unit,
-		每100克含量 = i.Value
-	}))
-	.ToArray();
-	@for (var i = 0; i < analysisItems.Length; i++)
-	{
-		var item = analysisItems[i];
-		<tr>
-			<td>@i</td>
-			<td>@item.分析項分類</td>
-			<td>@item.分析項</td>
-			<td>@item.單位</td>
-			<td>@item.每100克含量</td>
-		</tr>
+		<div>
+			<h3>Analysis Items</h3>
+			<table>
+				<tbody>
+					@foreach (var pair in Items)
+					{
+						<details>
+							<summary>@pair.Key</summary>
+							<ul>
+								@foreach (var item in pair.Value)
+								{
+									<li>@item.AnalysisItemInfo.Name</li>
+									<li>@item.AnalysisItemInfo.Unit</li>
+									<li>@item.Value</li>
+								}
+							</ul>
+						</details>
+					}
+
+				</tbody>
+			</table>
+		</div>
 	}
-	<button @onclick="GoBack">Back to List</button>
 }
 else if (IsLoading)
 {
@@ -43,6 +56,7 @@ else
 	[Parameter] public string IntegrationId { get; set; }
 
 	private Sample? Sample { get; set; }
+	private Dictionary<string, AnalysisItem[]>? Items { get; set; }
 	private bool IsLoading { get; set; } = true;
 
 	protected override async Task OnInitializedAsync()
@@ -52,7 +66,15 @@ else
 		// Sample = response?.FirstOrDefault();
 
 		using var context = DbFactory.CreateDbContext();
-		Sample = await context.Samples.FindAsync(IntegrationId);
+		Sample = await context.Samples
+		.Include(s => s.FoodCatagory)
+		.Include(s => s.AnalysisItems)
+		.ThenInclude(ai => ai.AnalysisItemInfo)
+		.ThenInclude(aii => aii.AnalysisItemCatagoryInfo)
+		.FirstOrDefaultAsync(s => s.Id == IntegrationId);
+		Items = Sample?.AnalysisItems
+		.GroupBy(x => x.AnalysisItemInfo.AnalysisItemCatagoryInfo.Name)
+		.ToDictionary(g => g.Key, g => g.ToArray());
 
 		IsLoading = false;
 	}
