@@ -88,6 +88,9 @@ public class Sample
 public class AnalysisItem
 {
     public int Id { get; set; }
+    /// <summary>
+    /// 每100g含量
+    /// </summary>
     [Display(Name = "每100g含量")]
     public string Value { get; set; }
     // 每單位重

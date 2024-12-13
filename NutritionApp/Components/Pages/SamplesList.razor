@@ -1,26 +1,28 @@
 ﻿@page "/sample-list"
 @using SampleDatabaseBuilder.Services
-@using Microsoft.EntityFrameworkCore;
+@using Microsoft.EntityFrameworkCore
+@using NutritionApp.Services
 @inject NavigationManager NavigationManager
 @inject IDbContextFactory<SamplesContext> DbFactory
+@inject SearchState State
 
 <h3>Sample List</h3>
 
 <div>
     <label for="sampleName">樣品名稱：</label>
-    <InputText id="sampleName" @bind-Value="SampleName" @onkeydown="HandleKeyDown" placeholder="請輸入樣品名稱..." />
+    <InputText id="sampleName" @bind-Value="State.SampleName" @onkeydown="HandleKeyDown" placeholder="請輸入樣品名稱..." />
 </div>
 <div>
     <label for="commonName">俗名：</label>
-    <InputText id="commonName" @bind-Value="CommonName" @onkeydown="HandleKeyDown" placeholder="請輸入俗名..." />
+    <InputText id="commonName" @bind-Value="State.CommonName" @onkeydown="HandleKeyDown" placeholder="請輸入俗名..." />
 </div>
 <div>
     <label for="catagory">食品分類：</label>
-    <InputText id="catagory" @bind-Value="Catagory" @onkeydown="HandleKeyDown" placeholder="請輸入食品分類..." />
+    <InputText id="catagory" @bind-Value="State.Catagory" @onkeydown="HandleKeyDown" placeholder="請輸入食品分類..." />
 </div>
 <button @onclick="FetchData" disabled="@IsLoading">Search</button>
 
-@if (Samples.Any())
+@if (State.Samples.Any())
 {
     <table class="table">
         <thead>
@@ -35,9 +37,9 @@
             </tr>
         </thead>
         <tbody>
-            @for (var i = 0; i < Samples.Count; i++)
+            @for (var i = 0; i < State.Samples.Count; i++)
             {
-                var sample = Samples[i];
+                var sample = State.Samples[i];
                 <tr @onclick="() => ShowDetails(sample.Id)" style="cursor: pointer;">
                     <td>@i</td>
                     <td>@sample.Id</td>
@@ -61,13 +63,8 @@ else
 }
 
 @code {
-    private string? SampleName { get; set; }
-    private string? CommonName { get; set; }
-    private string? Catagory { get; set; }
     private int? Limit { get; set; } = 2;
     private bool IsLoading { get; set; }
-
-    private List<Sample> Samples { get; set; } = new();
 
     private async Task FetchData()
     {
@@ -77,7 +74,7 @@ else
         try
         {
             IsLoading = true;
-            Samples = await GetSamplesFromDb();
+            State.Samples = await GetSamplesFromDb();
         }
         finally
         {
@@ -89,7 +86,9 @@ else
     {
         using var context = DbFactory.CreateDbContext();
         return await context.Samples
-        .Where(s => s.Name.Contains(SampleName))
+        .Where(s => !string.IsNullOrEmpty(State.SampleName) && s.Name.Contains(State.SampleName)
+        || !string.IsNullOrEmpty(State.Catagory) && s.FoodCatagory.Name.Contains(State.Catagory)
+        || !string.IsNullOrEmpty(State.CommonName) && s.CommonName.Contains(State.CommonName))
         .Include(s => s.FoodCatagory)
         .ToListAsync();
     }
@@ -105,9 +104,9 @@ else
         offset: null,
         limit: Limit,
         sort: Sort.整合編號,
-        食品分類: Catagory,
-        樣品名稱: SampleName,
-        俗名: CommonName,
+        食品分類: State.Catagory,
+        樣品名稱: State.SampleName,
+        俗名: State.CommonName,
         樣品英文名稱: null,
         分析項分類: null,
         分析項: null

@@ -1,6 +1,6 @@
 namespace SampleDatabaseBuilder.Services;
 
-public class SampleService
+public static class SampleService
 {
     public static IEnumerable<Sample> ConvertToSamples(IEnumerable<RowData> rowDatas) =>
         from rowData in rowDatas
@@ -33,4 +33,24 @@ public class SampleService
             //      }).ToList()
         };
 
+    public static AnalysisItem? GetAnalysisItem(this Sample sample, string name) =>
+        sample?.AnalysisItems.FirstOrDefault(ai => ai.AnalysisItemInfo.Name == name);
+
+    public static IEnumerable<AnalysisItem> GetAnalysisItems(this Sample sample, string name) =>
+        sample?.AnalysisItems?.Where(ai => ai.AnalysisItemInfo.AnalysisItemCatagoryInfo.Name == name) ?? Enumerable.Empty<AnalysisItem>();
+
+    public static double? GetValueInMg(this AnalysisItem item)
+    {
+        switch (item.AnalysisItemInfo.Unit)
+        {
+            case Unit.g:
+                return double.TryParse(item.Value, out double valueInG) ? valueInG * 1000 : null;
+            case Unit.mg:
+                return double.TryParse(item.Value, out double valueInMg) ? valueInMg : null;
+            case Unit.ug:
+                return double.TryParse(item.Value, out double valueInUg) ? valueInUg / 1000 : null;
+            default:
+                return null;
+        }
+    }
 }

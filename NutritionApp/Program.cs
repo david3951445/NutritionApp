@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using NutritionApp.Components;
+using NutritionApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddHttpClient();
 builder.Services.AddDbContextFactory<SamplesContext>();
 builder.Services.AddControllers();
+builder.Services.AddScoped<SearchState>();
 
 var app = builder.Build();
 

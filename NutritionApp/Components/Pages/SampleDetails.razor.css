@@ -1,0 +1,25 @@
+/* SampleDetails.razor.css */
+
+.table-custom {
+    table-layout: auto;
+    width: 100%;
+}
+
+.table-custom th {
+    background-color: #a07c07;
+    font-weight: bold;
+}
+
+.table-custom td,
+.table-custom th {
+    padding: 8px;
+    word-wrap: break-word;
+}
+
+.table-custom tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.table-custom td {
+    white-space: nowrap;
+}
