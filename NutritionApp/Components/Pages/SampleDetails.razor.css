@@ -2,12 +2,16 @@
 
 .table-custom {
     table-layout: auto;
-    width: 100%;
+    width: 60%;
 }
 
 .table-custom th {
-    background-color: #a07c07;
+    background-color: #e4ba8a;
     font-weight: bold;
+}
+
+.table-custom td {
+    white-space: nowrap;
 }
 
 .table-custom td,
@@ -20,6 +24,65 @@
     background-color: #f2f2f2;
 }
 
-.table-custom td {
-    white-space: nowrap;
+.table-general-info th {
+    /* Background color for headers */
+    background-color: #e1a9ec;
+    /* Bold font for headers */
+    font-weight: bold;
+}
+
+.analysis-container {
+    display: flex;
+    flex-direction: column;
+    /* Space between each table-pie chart pair */
+    gap: 1rem;
+}
+
+.analysis-item {
+    display: flex;
+    flex-direction: row;
+    align-items: start;
+    /* Space between table and pie chart */
+    gap: 1rem;
+}
+
+.chart-container {
+    /* Adjusts the pie chart's size dynamically */
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Optional: Explicit width for the pie chart container */
+    width: 40%;
+}
+
+.collapsible-header {
+    position: relative;
+    cursor: pointer;
+    /* Create space for the arrow */
+    padding-left: 1.5em;
+}
+
+.collapsible-header::before {
+    /* Default collapsed indicator */
+    content: '▼';
+    position: absolute;
+    /* Position it to the left of the text */
+    left: 0;
+    font-size: 0.9em;
+    transition: transform 0.2s ease-in-out;
+    /* Smooth rotation */
+}
+
+.collapsible-header[aria-expanded="true"]::before {
+    /* Rotate when expanded */
+    transform: rotate(180deg);
+}
+
+.page-split {
+    border: none;
+    border-top: 2px solid #ccc;
+    /* Thin solid line */
+    margin-top: 10px;
+    margin-bottom: 20px;
 }
