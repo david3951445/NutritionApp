@@ -1,10 +1,11 @@
-﻿@page "/sample-list"
+﻿@page "/samples/list"
 @using SampleDatabaseBuilder.Services
 @using Microsoft.EntityFrameworkCore
 @using NutritionApp.Services
 @inject NavigationManager NavigationManager
 @inject IDbContextFactory<SamplesContext> DbFactory
 @inject SearchState State
+@rendermode InteractiveServer
 
 <h3>Sample List</h3>
 
@@ -20,11 +21,13 @@
     <label for="catagory">食品分類：</label>
     <InputText id="catagory" @bind-Value="State.Catagory" @onkeydown="HandleKeyDown" placeholder="請輸入食品分類..." />
 </div>
-<button @onclick="FetchData" disabled="@IsLoading">Search</button>
+<button @onclick="FetchData" disabled="@IsLoading">
+    @(IsLoading ? "Searching..." : "Search")
+</button>
 
 @if (State.Samples.Any())
 {
-    <table class="table">
+    <table class="table table-striped">
         <thead>
             <tr>
                 <th>項次</th>
@@ -52,10 +55,6 @@
             }
         </tbody>
     </table>
-}
-else if (IsLoading)
-{
-    <p>Loading...</p>
 }
 else
 {
@@ -117,7 +116,7 @@ else
 
     private void ShowDetails(string integrationId)
     {
-        NavigationManager.NavigateTo($"/sample-details/{integrationId}");
+        NavigationManager.NavigateTo($"/samples/details/{integrationId}");
     }
 
     private async Task HandleKeyDown(KeyboardEventArgs e)
