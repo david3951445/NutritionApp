@@ -16,11 +16,10 @@ using (var context = new SamplesContext())
     // Recreate database
     context.Database.EnsureDeleted();
     context.Database.EnsureCreated();
-    // Create1(context, rowDatas);
-    Create2(context, rowDatas);
 
     Console.WriteLine("Save to database...");
-    context.SaveChanges();
+    // Create1(context, rowDatas);
+    Create2(context, rowDatas);
 }
 
 // Console.WriteLine("Output json...");
@@ -64,7 +63,7 @@ void Create1(SamplesContext context, IEnumerable<RowData> rowDatas)
 
 void Create2(SamplesContext context, IEnumerable<RowData> rowDatas)
 {
-    var analysisItemCatagoryInfos =
+    AnalysisItemCatagoryInfo[] analysisItemCatagoryInfos =
         (from row in rowDatas.GroupBy(x => x.整合編號).First()
          group row by row.分析項分類 into grouped
          select new AnalysisItemCatagoryInfo
@@ -78,9 +77,11 @@ void Create2(SamplesContext context, IEnumerable<RowData> rowDatas)
                       Unit = EnumExtensions.ParseOrDefault<Unit>(catagoryRow.含量單位)
                   }).ToArray()
          }).ToArray();
-    context.AddRange(analysisItemCatagoryInfos);
 
-    var foodCatagory =
+    context.AnalysisItemCatagoryInfos.AddRange(analysisItemCatagoryInfos);
+    context.SaveChanges();
+
+    FoodCatagory[] foodCatagory =
         (from row in rowDatas
          group row by row.食品分類 into grouped
          let first = grouped.First()
@@ -89,9 +90,11 @@ void Create2(SamplesContext context, IEnumerable<RowData> rowDatas)
              Id = first.整合編號[..1],
              Name = first.食品分類,
          }).ToArray();
-    context.AddRange(foodCatagory);
 
-    var samples =
+    context.FoodCatagories.AddRange(foodCatagory);
+    context.SaveChanges();
+
+    Sample[] samples =
         (from row in rowDatas
          group row by row.整合編號 into grouped
          let first = grouped.First()
@@ -114,7 +117,9 @@ void Create2(SamplesContext context, IEnumerable<RowData> rowDatas)
                       SampleId = grouped.Key
                   }).ToArray()
          }).ToArray();
-    context.AddRange(samples);
+
+    context.Samples.AddRange(samples);
+    context.SaveChanges();
 }
 
 // void CreateAnalysisItems()
