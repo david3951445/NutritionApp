@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.FluentUI.AspNetCore.Components;
 using NutritionApp.Components;
 using NutritionApp.Services;
 
@@ -7,10 +8,16 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-builder.Services.AddHttpClient();
-builder.Services.AddDbContextFactory<SamplesContext>();
-builder.Services.AddControllers();
+builder.Services.AddHttpClient()
+    .AddDbContextFactory<SamplesContext>()
+    .AddControllers();
 builder.Services.AddScoped<SearchState>();
+builder.Services.AddFluentUIComponents()
+    .AddSingleton(new LibraryConfiguration()
+    {
+        CollocatedJavaScriptQueryString = null,
+    })
+    .AddDataGridEntityFrameworkAdapter();
 
 var app = builder.Build();
 

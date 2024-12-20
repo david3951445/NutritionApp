@@ -1,12 +1,13 @@
 ﻿@page "/samples/details/{Id}"
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.FluentUI.AspNetCore.Components
 @using SampleDatabaseBuilder.Services
 @inject NavigationManager NavigationManager
 @inject IDbContextFactory<SamplesContext> DbFactory
 @rendermode InteractiveServer
 
 <h1>樣品詳細資料</h1>
-<hr class="page-split">
+<FluentDivider></FluentDivider>
 
 @if (Sample != null)
 {
@@ -65,7 +66,7 @@
 			{
 				<!-- Display the category title -->
 				<h1 style="margin-bottom: 0; padding-bottom: 0;">@pair.Key</h1>
-				<hr class="page-split">
+				<FluentDivider></FluentDivider>
 
 				<!-- Display the table for the category -->
 				<div class="analysis-item d-flex align-items-start">
@@ -111,7 +112,7 @@
 }
 
 @code {
-	[Parameter] public string Id { get; set; }
+	[Parameter] public string? Id { get; set; }
 
 	private Sample? Sample { get; set; }
 	private Dictionary<string, AnalysisItem[]>? CatagoryItems { get; set; }
@@ -124,6 +125,9 @@
 
 	protected override async Task OnInitializedAsync()
 	{
+		if (string.IsNullOrEmpty(Id))
+            throw new ArgumentException("Sample ID is required.");
+
 		using var context = DbFactory.CreateDbContext();
 		Sample = await context.Samples
 		.Include(s => s.FoodCatagory)
