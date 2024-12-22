@@ -1,5 +1,4 @@
 ﻿@page "/samples/list"
-@using Microsoft.FluentUI.AspNetCore.Components
 @using SampleDatabaseBuilder.Services
 @using Microsoft.EntityFrameworkCore
 @using NutritionApp.Services
@@ -11,61 +10,55 @@
 <h3>Sample List</h3>
 
 <div>
-    <label for="keyword">關鍵字：</label>
-    <InputText id="keyword" @bind-Value="State.Keyword" @onkeydown="HandleKeyDown" placeholder="請輸入關鍵字..." />
+    <FluentLabel>關鍵字：</FluentLabel>
+    <InputText @bind-Value="State.Keyword" @onkeydown="HandleKeyDown" placeholder="請輸入關鍵字..." />
+    <FluentButton @onclick="FetchData" Disabled="@IsLoading">
+        @(IsLoading ? "Searching..." : "Search")
+    </FluentButton>
 </div>
 
 <div>
-    <label for="category">食品分類：</label>
-    <InputSelect id="category" @bind-Value="State.Catagory">
-        <option>全部</option>
-        @foreach (var category in FoodCatagories)
-        {
-            <option value="@category.Name">@category.Name</option>
-        }
-    </InputSelect>
+    <FluentLabel>食品分類：</FluentLabel>
+    <FluentSelect Items="FoodCatagories" Id="category" @bind-Value="State.Catagory"></FluentSelect>
 </div>
 
 <FluentStack>
     <FluentCheckbox @bind-Value="@SampleNameChecked" Label="樣品名稱" />
     <FluentCheckbox @bind-Value="@CommonNameChecked" Label="俗名" />
+    <FluentCheckbox @bind-Value="@EnglishNameChecked" Label="英文名稱" />
+    <FluentCheckbox @bind-Value="@ContentDescriptionChecked" Label="內容物描述" />
 </FluentStack>
 
-<button @onclick="FetchData" disabled="@IsLoading">
-    @(IsLoading ? "Searching..." : "Search")
-</button>
-
-    <FluentDataGrid Items="@State.Samples.AsQueryable()" 
-                    Pagination="Pagination" 
-                    RowSize="@DataGridRowSize.Medium" 
-                    ResizableColumns=true
-                    GridTemplateColumns=".8fr 1.5fr .8fr 2fr 2.5fr 3fr .8fr"
-                    MultiLine="true">
-        <PropertyColumn Title="整合編號" Property="@(s => s.Id)" Sortable="true"/>
-        <PropertyColumn Title="樣品名稱" Property="@(s => s.Name)" Sortable="true"/>
-        <TemplateColumn Title="詳細成分">
-            <FluentButton Appearance="Appearance.Accent" @onclick="@(() => ShowDetails(context.Id))">...</FluentButton>
-        </TemplateColumn>
-        <PropertyColumn Title="俗名" Property="@(s => s.CommonName)" Sortable="true"/>
-        <PropertyColumn Title="樣品英文名稱" Property="@(s => s.EnglishName)" Sortable="true"/>
-        <PropertyColumn Title="內容物描述" Property="@(s => s.ContentDescription)" Sortable="true"/>
-        <PropertyColumn Title="食品分類" Property="@(s => s.FoodCatagory.Name)" Sortable="true"/>
-    </FluentDataGrid>
+<FluentDataGrid Items="@State.Samples.AsQueryable()" Pagination="Pagination" RowSize="@DataGridRowSize.Medium"
+    ResizableColumns=true GridTemplateColumns=".8fr 1.5fr .8fr 2fr 2.5fr 3fr .8fr" MultiLine="true">
+    <PropertyColumn Title="整合編號" Property="@(s => s.Id)" Sortable="true" />
+    <PropertyColumn Title="樣品名稱" Property="@(s => s.Name)" Sortable="true" />
+    <TemplateColumn Title="詳細成分">
+        <FluentButton Appearance="Appearance.Accent" @onclick="@(() => ShowDetails(context.Id))">...</FluentButton>
+    </TemplateColumn>
+    <PropertyColumn Title="俗名" Property="@(s => s.CommonName)" Sortable="true" />
+    <PropertyColumn Title="樣品英文名稱" Property="@(s => s.EnglishName)" Sortable="true" />
+    <PropertyColumn Title="內容物描述" Property="@(s => s.ContentDescription)" Sortable="true" />
+    <PropertyColumn Title="食品分類" Property="@(s => s.FoodCatagory.Name)" Sortable="true" />
+</FluentDataGrid>
 
 <FluentPaginator State="@Pagination" />
 
 @code {
-    private int? Limit { get; set; } = 2;
-    private bool IsLoading { get; set; }
-    private List<FoodCatagory> FoodCatagories { get; set; } = [];
-    private bool SampleNameChecked = true;
-    private bool CommonNameChecked = true;
+    int? Limit { get; set; } = 2;
+    bool IsLoading { get; set; }
+    List<string> FoodCatagories { get; set; } = [];
+    bool SampleNameChecked = true;
+    bool CommonNameChecked = true;
+    bool EnglishNameChecked = true;
+    bool ContentDescriptionChecked = true;
     PaginationState Pagination = new PaginationState { ItemsPerPage = 20 };
 
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-        FoodCatagories = await context.FoodCatagories.ToListAsync();
+        FoodCatagories = await context.FoodCatagories.Select(c => c.Name).ToListAsync();
+        FoodCatagories.Insert(0, "全部");
         await FetchData();
     }
 
@@ -94,13 +87,17 @@
 
         if (!string.IsNullOrEmpty(State.Keyword))
         {
-            result = result.Where(s => (SampleNameChecked && s.Name.Contains(State.Keyword)) || 
-                                       (CommonNameChecked && s.CommonName != null && s.CommonName.Contains(State.Keyword)));
+            result = result.Where(s =>
+            (SampleNameChecked && s.Name.Contains(State.Keyword)) ||
+            (CommonNameChecked && s.CommonName != null && s.CommonName.Contains(State.Keyword)) ||
+            (EnglishNameChecked && s.EnglishName != null && s.EnglishName.Contains(State.Keyword)) ||
+            (ContentDescriptionChecked && s.ContentDescription != null && s.ContentDescription.Contains(State.Keyword))
+            );
         }
 
         return await result
-            .Include(s => s.FoodCatagory)
-            .ToListAsync();
+        .Include(s => s.FoodCatagory)
+        .ToListAsync();
     }
 
     private async Task<List<Sample>> GetSamplesFromHttp()
@@ -109,17 +106,17 @@
         using var httpClient = new HttpClient();
         var apiClient = new FdaNutritionDatabaseClient(httpClient);
         var response = await apiClient.ActivityGetAsync(
-            method: Method.OpenData,
-            infoId: InfoId._20,
-            offset: null,
-            limit: Limit,
-            sort: Sort.整合編號,
-            食品分類: State.Catagory,
-            樣品名稱: State.SampleName,
-            俗名: State.CommonName,
-            樣品英文名稱: null,
-            分析項分類: null,
-            分析項: null
+        method: Method.OpenData,
+        infoId: InfoId._20,
+        offset: null,
+        limit: Limit,
+        sort: Sort.整合編號,
+        食品分類: State.Catagory,
+        樣品名稱: State.Keyword,
+        俗名: State.Keyword,
+        樣品英文名稱: null,
+        分析項分類: null,
+        分析項: null
         );
 
         return SampleService.ConvertToSamples(response).ToList();

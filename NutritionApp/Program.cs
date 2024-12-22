@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.FluentUI.AspNetCore.Components;
+﻿using Microsoft.FluentUI.AspNetCore.Components;
 using NutritionApp.Components;
 using NutritionApp.Services;
 
@@ -8,16 +7,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+builder.Services.AddFluentUIComponents();
+
 builder.Services.AddHttpClient()
     .AddDbContextFactory<SamplesContext>()
     .AddControllers();
 builder.Services.AddScoped<SearchState>();
-builder.Services.AddFluentUIComponents()
-    .AddSingleton(new LibraryConfiguration()
-    {
-        CollocatedJavaScriptQueryString = null,
-    })
-    .AddDataGridEntityFrameworkAdapter();
 
 var app = builder.Build();
 
@@ -31,23 +26,12 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-
 app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-app.MapDefaultControllerRoute();
 
-// Initialize the database
-// var scopeFactory = app.Services.GetRequiredService<IServiceScopeFactory>();
-// using (var scope = scopeFactory.CreateScope())
-// {
-//     var db = scope.ServiceProvider.GetRequiredService<SampleStoreContext>();
-//     if (db.Database.EnsureCreated())
-//     {
-//         SeedData.Initialize(db);
-//     }
-// }
+app.MapDefaultControllerRoute();
 
 app.Run();
