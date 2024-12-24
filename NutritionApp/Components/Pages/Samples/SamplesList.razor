@@ -11,7 +11,7 @@
 
 <div>
     <FluentLabel>關鍵字：</FluentLabel>
-    <InputText @bind-Value="State.Keyword" @onkeydown="HandleKeyDown" placeholder="請輸入關鍵字..." />
+    <FluentTextField @bind-Value="State.Keyword" @onkeydown="HandleKeyDown" Placeholder="請輸入關鍵字..." />
     <FluentButton @onclick="FetchData" Disabled="@IsLoading">
         @(IsLoading ? "Searching..." : "Search")
     </FluentButton>
