@@ -30,16 +30,18 @@
 </FluentStack>
 
 <FluentDataGrid Items="@State.Samples.AsQueryable()" Pagination="Pagination" RowSize="@DataGridRowSize.Medium"
-    ResizableColumns=true GridTemplateColumns=".8fr 1.5fr .8fr 2fr 2.5fr 3fr .8fr" MultiLine="true">
+    ResizableColumns=true GridTemplateColumns=".8fr 1.5fr 2fr 2.5fr 3fr .8fr .8fr" MultiLine="true">
     <PropertyColumn Title="整合編號" Property="@(s => s.Id)" Sortable="true" />
     <PropertyColumn Title="樣品名稱" Property="@(s => s.Name)" Sortable="true" />
-    <TemplateColumn Title="詳細成分">
-        <FluentButton Appearance="Appearance.Accent" @onclick="@(() => ShowDetails(context.Id))">...</FluentButton>
-    </TemplateColumn>
     <PropertyColumn Title="俗名" Property="@(s => s.CommonName)" Sortable="true" />
     <PropertyColumn Title="樣品英文名稱" Property="@(s => s.EnglishName)" Sortable="true" />
     <PropertyColumn Title="內容物描述" Property="@(s => s.ContentDescription)" Sortable="true" />
     <PropertyColumn Title="食品分類" Property="@(s => s.FoodCatagory.Name)" Sortable="true" />
+    <TemplateColumn Title="詳細成分" Align="Align.Center">
+        <FluentButton @onclick="@(() => ShowDetails(context.Id))">
+            <FluentIcon Value="@(new Icons.Regular.Size16.MoreHorizontal())" />
+        </FluentButton>
+    </TemplateColumn>
 </FluentDataGrid>
 
 <FluentPaginator State="@Pagination" />
@@ -132,11 +134,5 @@
     {
         if (e.Key == "Enter")
             await FetchData();
-    }
-
-    private void HandlerCellClick(FluentDataGridCell<Sample> sample)
-    {
-        if (sample.Item != null)
-            ShowDetails(sample.Item.Id);
     }
 }
