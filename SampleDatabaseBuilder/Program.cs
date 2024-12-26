@@ -38,29 +38,6 @@ using (var context = new SamplesContext())
 
 Console.WriteLine("Convert complete.");
 
-void Create1(SamplesContext context, IEnumerable<RowData> rowDatas)
-{
-    var samples = SampleService.ConvertToSamples(rowDatas);
-
-    Console.WriteLine("Detect whether there exist duplicated samples...");
-    var duplicatedSamples = samples.GroupBy(s => s.Id)
-        .Where(g => g.Count() > 1)
-        .Select(g => g.Key)
-        .ToList();
-    if (duplicatedSamples.Any())
-    {
-        Console.WriteLine("Duplicated samples exist:");
-        foreach (var id in duplicatedSamples)
-            Console.WriteLine(id);
-        Console.WriteLine("Please clean up the database before running this program.");
-        return;
-    }
-
-    Console.WriteLine("Add data to database...");
-    foreach (var sample in samples)
-        context.Add(sample);
-}
-
 void Create2(SamplesContext context, IEnumerable<RowData> rowDatas)
 {
     AnalysisItemCatagoryInfo[] analysisItemCatagoryInfos =
@@ -74,9 +51,15 @@ void Create2(SamplesContext context, IEnumerable<RowData> rowDatas)
                   select new AnalysisItemInfo
                   {
                       Name = catagoryRow.分析項,
-                      Unit = EnumExtensions.ParseOrDefault<Unit>(catagoryRow.含量單位)
-                  }).ToArray()
-         }).ToArray();
+                      Unit = EnumExtensions.ParseOrDefault<Unit>(catagoryRow.含量單位),
+                      DisplayOrder = GetAnalysisItemInfoDisplayOrder(catagoryRow)
+                  })
+                  .OrderBy(ii => ii.DisplayOrder)
+                  .ToArray(),
+            DisplayOrder = GetAnalysisItemCatagoryInfoDisplayOrder(grouped.First())
+         })
+         .OrderBy(ci => ci.DisplayOrder)
+         .ToArray();
 
     context.AnalysisItemCatagoryInfos.AddRange(analysisItemCatagoryInfos);
     context.SaveChanges();
@@ -122,6 +105,20 @@ void Create2(SamplesContext context, IEnumerable<RowData> rowDatas)
     context.SaveChanges();
 }
 
+int GetAnalysisItemInfoDisplayOrder(RowData row)
+{
+    string[] names = DbGlossary.ItemCatagory.GetSubItems(row.分析項分類);
+    int index = Array.IndexOf(names, row.分析項);
+    return index == -1 ? names.Length : index;
+}
+
+int GetAnalysisItemCatagoryInfoDisplayOrder(RowData row)
+{
+    string[] names = DbGlossary.ItemCatagory.OrderedNames;
+    int index = Array.IndexOf(names, row.分析項分類);
+    return index == -1 ? names.Length : index;
+}
+
 // void CreateAnalysisItems()
 // {
 // AnalysisItemInfo[] generalIngredients =
@@ -147,19 +144,3 @@ void Create2(SamplesContext context, IEnumerable<RowData> rowDatas)
 //     new() { Name = "乳糖", Unit = Unit.g },
 // };
 // ...
-// AnalysisItemCatagoryInfo[] analysisItemCatagoryInfos =
-// {
-//     new() { Name = "一般成分", AnalysisItemInfos = generalIngredients },
-//     new() { Name = "糖質分析", AnalysisItemInfos = sugarAnalysis },
-//     new() { Name = "礦物質"},
-//     new() { Name = "維生素A"},
-//     new() { Name = "維生素D"},
-//     new() { Name = "維生素E"},
-//     new() { Name = "維生素K"},
-//     new() { Name = "維生素K"},
-//     new() { Name = "維生素B群 & C"},
-//     new() { Name = "胺基酸組成"},
-//     new() { Name = "脂肪酸組成"},
-//     new() { Name = "其他"},
-// };
-// }

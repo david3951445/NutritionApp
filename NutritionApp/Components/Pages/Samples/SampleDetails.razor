@@ -8,9 +8,9 @@
 <h1>樣品詳細資料</h1>
 <FluentDivider></FluentDivider>
 
-@if (Sample != null)
-{
-	<FluentStack Orientation="Orientation.Vertical">
+<FluentStack Orientation="Orientation.Vertical">
+	@if (NameValues.Any())
+	{
 		<FluentGrid Spacing="1">
 			@foreach (var nameValue in NameValues)
 			{
@@ -22,45 +22,45 @@
 				</FluentGridItem>
 			}
 		</FluentGrid>
+	}
 
-		@if (CatagoryItems != null)
+	@if (CatagoryItems.Any())
+	{
+		@foreach (var pair in CatagoryItems)
 		{
-			@foreach (var pair in CatagoryItems)
-			{
-				<FluentCard MinimalStyle="true">
-					<FluentGrid>
-						<FluentGridItem xs="12">
-							<FluentLabel Typo="Typography.H2">@pair.Key</FluentLabel>
-						</FluentGridItem>
-						<FluentGridItem xs="12" sm="6">
-							<FluentDataGrid Items="@pair.Value.AsQueryable()" Style="width: 60%; table-layout: auto;">
-								<PropertyColumn Title="分析項名稱" Property="@(i => i.AnalysisItemInfo.Name)" />
-								<PropertyColumn Title="單位" Property="@(i => i.AnalysisItemInfo.Unit)" />
-								<PropertyColumn Title="每100g含量" Property="@(i => i.Value)" />
-							</FluentDataGrid>
-						</FluentGridItem>
-						<FluentGridItem xs="12" sm="6" HiddenWhen="GridItemHidden.SmAndDown">
-							@if (PieData[pair.Key].Any())
-							{
-								<PieChart Labels="PieData[pair.Key].Keys.ToList()" Data="PieData[pair.Key].Values.ToList()" />
-							}
-						</FluentGridItem>
-					</FluentGrid>
-				</FluentCard>
-			}
+			<FluentCard MinimalStyle="true">
+				<FluentGrid>
+					<FluentGridItem xs="12">
+						<FluentLabel Typo="Typography.H2">@pair.Key</FluentLabel>
+					</FluentGridItem>
+					<FluentGridItem xs="12" sm="6">
+						<FluentDataGrid Items="@pair.Value.AsQueryable()" Style="width: 60%; table-layout: auto;">
+							<PropertyColumn Title="分析項名稱" Property="@(i => i.AnalysisItemInfo.Name)" />
+							<PropertyColumn Title="單位" Property="@(i => i.AnalysisItemInfo.Unit)" />
+							<PropertyColumn Title="每100g含量" Property="@(i => i.Value)" />
+						</FluentDataGrid>
+					</FluentGridItem>
+					<FluentGridItem xs="12" sm="6" HiddenWhen="GridItemHidden.SmAndDown">
+						@if (PieData[pair.Key].Any())
+						{
+							<PieChart Labels="PieData[pair.Key].Keys.ToList()" Data="PieData[pair.Key].Values.ToList()" />
+						}
+					</FluentGridItem>
+				</FluentGrid>
+			</FluentCard>
 		}
-	</FluentStack>
+	}
+</FluentStack>
 
-	<button @onclick="GoBack">Go Back</button>
-}
+<button @onclick="GoBack">Go Back</button>
 
 @code {
 	[Parameter] public string? Id { get; set; }
 
 	Sample? Sample { get; set; }
-	Dictionary<string, AnalysisItem[]>? CatagoryItems { get; set; }
-	Dictionary<string, Dictionary<string, double>> PieData = [];
 	Dictionary<string, string> NameValues = [];
+	Dictionary<string, AnalysisItem[]> CatagoryItems = [];
+	Dictionary<string, Dictionary<string, double>> PieData = [];
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -77,9 +77,22 @@
 
 		if (Sample != null)
 		{
+			NameValues = new()
+				{
+					["整合編號"] = Sample.Id,
+					["樣品名稱"] = Sample.Name,
+					["俗名"] = Sample.CommonName ?? string.Empty,
+					["英文名稱"] = Sample.EnglishName ?? string.Empty,
+					["內容物描述"] = Sample.ContentDescription ?? string.Empty,
+					["食品分類"] = Sample.FoodCatagory.Name
+				};
+
 			CatagoryItems = Sample.AnalysisItems
 			.GroupBy(x => x.AnalysisItemInfo.AnalysisItemCatagoryInfo.Name)
-			.ToDictionary(g => g.Key, g => g.ToArray());
+			.OrderBy(g => g.First().AnalysisItemInfo.AnalysisItemCatagoryInfo.DisplayOrder)
+			.ToDictionary(g => g.Key, g => g
+			.OrderBy(ai => ai.AnalysisItemInfo.DisplayOrder)
+			.ToArray());
 
 			PieData = CatagoryItems.ToDictionary(ci => ci.Key, ci =>
 			{
@@ -92,24 +105,6 @@
 					return [];
 				return items.ToDictionary(x => x.Name, x => Math.Round(x.Value / total * 100, 2));
 			});
-
-			NameValues = new()
-				{
-					["整合編號"] = Sample.Id,
-					["樣品名稱"] = Sample.Name,
-					["俗名"] = Sample.CommonName ?? string.Empty,
-					["英文名稱"] = Sample.EnglishName ?? string.Empty,
-					["內容物描述"] = Sample.ContentDescription ?? string.Empty,
-					["食品分類"] = Sample.FoodCatagory.Name
-				};
-
-			var calories = Sample.GetAnalysisItem("熱量");
-			if (calories != null)
-				NameValues.Add($"熱量({calories.AnalysisItemInfo.Unit})", $"{calories.Value}");
-
-			var correctedCalories = Sample.GetAnalysisItem("修正熱量");
-			if (correctedCalories != null)
-				NameValues.Add($"修正熱量({correctedCalories.AnalysisItemInfo.Unit})", $"{correctedCalories.Value}");
 		}
 	}
 

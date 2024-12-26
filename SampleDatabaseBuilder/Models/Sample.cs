@@ -68,6 +68,7 @@ public class AnalysisItemInfo
     [Display(Name = "單位")]
     public Unit Unit { get; set; }
     // public string? Description { get; set;}
+    public int DisplayOrder { get; set; }
 
     // public int AnalysisItemId { get; set; }
     // public AnalysisItem AnalysisItem { get; set; }
@@ -80,6 +81,7 @@ public class AnalysisItemCatagoryInfo
     public int Id { get; set; }
     public string Name { get; set; } = null!;
     // public string? Description { get; set;}
+    public int DisplayOrder { get; set; }
 
     public ICollection<AnalysisItemInfo> AnalysisItemInfos { get; set; } = [];
 }
