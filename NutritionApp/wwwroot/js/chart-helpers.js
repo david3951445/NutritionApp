@@ -1,4 +1,4 @@
-function renderPieChart(chartId, labels, data, backgroundColors) {
+function renderPieChart(chartId, labels, data, backgroundColors, fontSize) {
     const ctx = document.getElementById(chartId).getContext('2d');
     new Chart(ctx, {
         type: 'pie',
@@ -15,6 +15,11 @@ function renderPieChart(chartId, labels, data, backgroundColors) {
             plugins: {
                 legend: {
                     position: 'top',
+                    labels: {
+                        font: {
+                            size: fontSize
+                        }
+                    }
                 },
                 tooltip: {
                     callbacks: {

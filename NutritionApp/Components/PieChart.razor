@@ -12,6 +12,9 @@
     public int Height { get; set; } = 500; // Default height
 
     [Parameter]
+    public int FontSize { get; set; } = 18; // Default font size
+
+    [Parameter]
     public IEnumerable<string> Labels { get; set; } = [];
 
     [Parameter]
@@ -32,7 +35,7 @@
         {
             if (!BackgroundColors.Any())
                 BackgroundColors = GenerateUniformColorsInRGB(Data.Count());
-            await JSRuntime.InvokeVoidAsync("renderPieChart", ChartId, Labels, Data, BackgroundColors);
+            await JSRuntime.InvokeVoidAsync("renderPieChart", ChartId, Labels, Data, BackgroundColors, FontSize);
         }
     }
 
