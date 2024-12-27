@@ -1,0 +1,73 @@
+@page "/samples/compare/{Id1}-{Id2}"
+@using SampleDatabaseBuilder.Services
+@using Microsoft.EntityFrameworkCore
+@using NutritionApp.Services
+@inject SampleService SampleService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+@if (ErrorMessage != null)
+{
+    <h1>@ErrorMessage</h1>
+    return;
+}
+
+@if (AnalysisItemsByCatagory1.Any())
+{
+    @for (var i = 0; i < AnalysisItemsByCatagory1.Count; i++)
+    {
+        var pair1 = AnalysisItemsByCatagory1.ToArray()[i];
+        var pair2 = AnalysisItemsByCatagory2.ToArray()[i];
+
+        <FluentCard MinimalStyle="true">
+            <FluentGrid>
+                <FluentGridItem xs="12">
+                    <FluentLabel Typo="Typography.H2">@pair1.Key</FluentLabel>
+                </FluentGridItem>
+                <FluentGridItem xs="12" sm="6">
+                    <FluentDataGrid Items="@pair1.Value.AsQueryable()" Style="width: 60%; table-layout: auto;">
+                        <PropertyColumn Title="分析項名稱" Property="@(i => i.AnalysisItemInfo.Name)" />
+                        <PropertyColumn Title="單位" Property="@(i => i.AnalysisItemInfo.Unit)" />
+                        <PropertyColumn Title="每100g含量" Property="@(i => i.Value)" />
+                    </FluentDataGrid>
+                </FluentGridItem>
+                <FluentGridItem xs="12" sm="6">
+                    <FluentDataGrid Items="@pair2.Value.AsQueryable()" Style="width: 60%; table-layout: auto;">
+                        <PropertyColumn Title="分析項名稱" Property="@(i => i.AnalysisItemInfo.Name)" />
+                        <PropertyColumn Title="單位" Property="@(i => i.AnalysisItemInfo.Unit)" />
+                        <PropertyColumn Title="每100g含量" Property="@(i => i.Value)" />
+                    </FluentDataGrid>
+                </FluentGridItem>
+            </FluentGrid>
+        </FluentCard>
+    }
+}
+
+@code {
+    [Parameter] public string Id1 { get; set; } = "D32004"; // apple
+    [Parameter] public string Id2 { get; set; } = "D08001"; // banana
+
+    Sample? Sample1;
+    Sample? Sample2;
+    Dictionary<string, AnalysisItem[]> AnalysisItemsByCatagory1 = [];
+    Dictionary<string, AnalysisItem[]> AnalysisItemsByCatagory2 = [];
+    string? ErrorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Sample1 = await SampleService.GetSampleAsync(Id1);
+        if (Sample1 == null)
+        {
+            ErrorMessage = "Sample 1 not found.";
+            return;
+        }
+        Sample2 = await SampleService.GetSampleAsync(Id2);
+        if (Sample2 == null)
+        {
+            ErrorMessage = "Sample 2 not found.";
+            return;
+        }
+        AnalysisItemsByCatagory1 = Sample1.AnalysisItemsByCatagory;
+        AnalysisItemsByCatagory2 = Sample2.AnalysisItemsByCatagory;
+    }
+}

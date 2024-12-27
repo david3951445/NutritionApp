@@ -1,0 +1,72 @@
+@using SampleDatabaseBuilder.Services
+@using Microsoft.EntityFrameworkCore
+@inject SampleService SampleService
+@inject NavigationManager NavigationManager
+
+<h1>樣品比較</h1>
+@if (Sample1 != null)
+{
+    <SearchBar Label="樣品1" Placeholder="請輸入樣品1的整合編號" SearchData="@SearchData" DefaultValue="@Sample1.Name"
+        ItemSelected="Sample1_OnItemSelected" />
+    <div>
+        <p>@Sample1.CommonName</p>
+    </div>
+}
+else
+{
+    <p>查無整合編號為 @Id1 的樣品</p>
+}
+
+@if (Sample2 != null)
+{
+    <SearchBar Label="樣品2" Placeholder="請輸入樣品2的整合編號" SearchData="@SearchData" DefaultValue="Sample2.Name"
+        ItemSelected="Sample2_OnItemSelected" />
+    <div>
+        <p>@Sample2.CommonName</p>
+    </div>
+}
+else
+{
+    <p>查無整合編號為 @Id2 的樣品</p>
+
+}
+
+<FluentButton @onclick="NavigateToDetails">比較</FluentButton>
+
+@code {
+    [Parameter] public string Id1 { get; set; } = "D32004"; // apple
+    [Parameter] public string Id2 { get; set; } = "D08001"; // banana
+    Sample? Sample1;
+    Sample? Sample2;
+    List<string> SearchData { get; set; } = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = SampleService.GetContext();
+        SearchData = await context.Samples.Select(s => s.Id).ToListAsync();
+        Sample1 = await GetSampleOverview(context, Id1);
+        Sample2 = await GetSampleOverview(context, Id2);
+    }
+
+    async void Sample1_OnItemSelected(string id)
+    {
+        using var context = SampleService.GetContext();
+        Sample1 = await GetSampleOverview(context, Id1);
+    }
+
+    async void Sample2_OnItemSelected(string id)
+    {
+        using var context = SampleService.GetContext();
+        Sample2 = await GetSampleOverview(context, Id2);
+    }
+
+    async Task<Sample?> GetSampleOverview(SamplesContext context, string id)
+    {
+        return await context.Samples.Include(s => s.FoodCatagory).FirstOrDefaultAsync(s => s.Id == id);
+    }
+
+    void NavigateToDetails()
+    {
+        NavigationManager.NavigateTo($"/compare/{Id1}-{Id2}");
+    }
+}

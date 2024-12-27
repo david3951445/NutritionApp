@@ -1,6 +1,7 @@
 ﻿using Microsoft.FluentUI.AspNetCore.Components;
 using NutritionApp.Components;
 using NutritionApp.Services;
+using SampleDatabaseBuilder.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +13,8 @@ builder.Services.AddFluentUIComponents();
 builder.Services.AddHttpClient()
     .AddDbContextFactory<SamplesContext>()
     .AddControllers();
-builder.Services.AddScoped<SearchState>();
+builder.Services.AddScoped<SearchState>()
+    .AddScoped<SampleService>();
 
 var app = builder.Build();
 

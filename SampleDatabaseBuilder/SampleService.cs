@@ -1,8 +1,32 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace SampleDatabaseBuilder.Services;
 
-public static class SampleService
+public class SampleService
 {
-    public static IEnumerable<Sample> ConvertToSamples(IEnumerable<RowData> rowDatas) =>
+    private readonly IDbContextFactory<SamplesContext> _dbFactory;
+
+    public DbSet<Sample> Samples => _dbFactory.CreateDbContext().Samples;
+
+    public SampleService(IDbContextFactory<SamplesContext> dbFactory)
+    {
+        _dbFactory = dbFactory;
+    }
+
+    public SamplesContext GetContext() => _dbFactory.CreateDbContext();
+    
+    public async Task<Sample?> GetSampleAsync(string id)
+    {
+        using var context = _dbFactory.CreateDbContext();
+        return await context.Samples
+            .Include(s => s.FoodCatagory)
+            .Include(s => s.AnalysisItems)
+            .ThenInclude(ai => ai.AnalysisItemInfo)
+            .ThenInclude(aii => aii.AnalysisItemCatagoryInfo)
+            .FirstOrDefaultAsync(s => s.Id == id);
+    }
+
+    public IEnumerable<Sample> ConvertToSamples(IEnumerable<RowData> rowDatas) =>
         from rowData in rowDatas
         group rowData by rowData.整合編號 into grouped
         let first = grouped.First()
@@ -32,7 +56,10 @@ public static class SampleService
             //              }).ToList()
             //      }).ToList()
         };
+}
 
+public static class Extensions
+{
     public static AnalysisItem? GetAnalysisItem(this Sample sample, string name) =>
         sample?.AnalysisItems.FirstOrDefault(ai => ai.AnalysisItemInfo.Name == name);
 

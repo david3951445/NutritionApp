@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-public class Sample
+public partial class Sample
 {
     /// <summary>
     /// 整合編號

@@ -1,9 +1,16 @@
 ﻿@page "/samples/details/{Id}"
 @using Microsoft.EntityFrameworkCore
+@using NutritionApp.Components.Charting
 @using SampleDatabaseBuilder.Services
 @inject NavigationManager NavigationManager
-@inject IDbContextFactory<SamplesContext> DbFactory
+@inject SampleService SampleService
 @rendermode InteractiveServer
+
+@if (Sample == null)
+{
+	<h1>查無整合編號為"@Id"的樣品</h1>
+	return;
+}
 
 <h1>樣品詳細資料</h1>
 <FluentDivider></FluentDivider>
@@ -24,9 +31,9 @@
 		</FluentGrid>
 	}
 
-	@if (CatagoryItems.Any())
+	@if (AnalysisItemsByCatagory.Any())
 	{
-		@foreach (var pair in CatagoryItems)
+		@foreach (var pair in AnalysisItemsByCatagory)
 		{
 			<FluentCard MinimalStyle="true">
 				<FluentGrid>
@@ -59,7 +66,7 @@
 
 	Sample? Sample { get; set; }
 	Dictionary<string, string> NameValues = [];
-	Dictionary<string, AnalysisItem[]> CatagoryItems = [];
+	Dictionary<string, AnalysisItem[]> AnalysisItemsByCatagory = [];
 	Dictionary<string, Dictionary<string, double>> PieData = [];
 
 	protected override async Task OnInitializedAsync()
@@ -67,45 +74,33 @@
 		if (string.IsNullOrEmpty(Id))
 			throw new ArgumentException("Sample ID is required.");
 
-		using var context = DbFactory.CreateDbContext();
-		Sample = await context.Samples
-		.Include(s => s.FoodCatagory)
-		.Include(s => s.AnalysisItems)
-		.ThenInclude(ai => ai.AnalysisItemInfo)
-		.ThenInclude(aii => aii.AnalysisItemCatagoryInfo)
-		.FirstOrDefaultAsync(s => s.Id == Id);
+		Sample = await SampleService.GetSampleAsync(Id);
+		if (Sample == null)
+			return;
 
-		if (Sample != null)
-		{
-			NameValues = new()
-				{
-					["整合編號"] = Sample.Id,
-					["樣品名稱"] = Sample.Name,
-					["俗名"] = Sample.CommonName ?? string.Empty,
-					["英文名稱"] = Sample.EnglishName ?? string.Empty,
-					["內容物描述"] = Sample.ContentDescription ?? string.Empty,
-					["食品分類"] = Sample.FoodCatagory.Name
-				};
-
-			CatagoryItems = Sample.AnalysisItems
-			.GroupBy(x => x.AnalysisItemInfo.AnalysisItemCatagoryInfo.Name)
-			.OrderBy(g => g.First().AnalysisItemInfo.AnalysisItemCatagoryInfo.DisplayOrder)
-			.ToDictionary(g => g.Key, g => g
-			.OrderBy(ai => ai.AnalysisItemInfo.DisplayOrder)
-			.ToArray());
-
-			PieData = CatagoryItems.ToDictionary(ci => ci.Key, ci =>
+		NameValues = new()
 			{
-				var items = from ai in ci.Value
-							let value = ai.GetValueInMg()
-							where value.HasValue && value > 0 && !ai.AnalysisItemInfo.Name.Contains("總量")
-							select new { ai.AnalysisItemInfo.Name, value.Value };
-				var total = items.Sum(x => x.Value);
-				if (total == 0)
-					return [];
-				return items.ToDictionary(x => x.Name, x => Math.Round(x.Value / total * 100, 2));
-			});
-		}
+				["整合編號"] = Sample.Id,
+				["樣品名稱"] = Sample.Name,
+				["俗名"] = Sample.CommonName ?? string.Empty,
+				["英文名稱"] = Sample.EnglishName ?? string.Empty,
+				["內容物描述"] = Sample.ContentDescription ?? string.Empty,
+				["食品分類"] = Sample.FoodCatagory.Name
+			};
+
+		AnalysisItemsByCatagory = Sample.AnalysisItemsByCatagory;
+
+		PieData = AnalysisItemsByCatagory.ToDictionary(ci => ci.Key, ci =>
+		{
+			var items = from ai in ci.Value
+						let value = ai.GetValueInMg()
+						where value.HasValue && value > 0 && !ai.AnalysisItemInfo.Name.Contains("總量")
+						select new { ai.AnalysisItemInfo.Name, value.Value };
+			var total = items.Sum(x => x.Value);
+			if (total == 0)
+				return [];
+			return items.ToDictionary(x => x.Name, x => Math.Round(x.Value / total * 100, 2));
+		});
 	}
 
 	private void GoBack()

@@ -1,10 +1,10 @@
 @page "/samples/compare"
 @using SampleDatabaseBuilder.Services
-@using Microsoft.EntityFrameworkCore
-@using NutritionApp.Services
-@inject IDbContextFactory<SamplesContext> DbFactory
+@inject SampleService SampleService
 @rendermode InteractiveServer
 
-@code{
+<CompareOverview />
+
+@code {
 
 }

@@ -3,7 +3,7 @@
 @using Microsoft.EntityFrameworkCore
 @using NutritionApp.Services
 @inject NavigationManager NavigationManager
-@inject IDbContextFactory<SamplesContext> DbFactory
+@inject SampleService SampleService
 @inject SearchState State
 @rendermode InteractiveServer
 
@@ -58,7 +58,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbFactory.CreateDbContext();
+        using var context = SampleService.GetContext();
         FoodCatagories = await context.FoodCatagories.Select(c => c.Name).ToListAsync();
         FoodCatagories.Insert(0, "全部");
         await FetchData();
@@ -82,7 +82,7 @@
 
     private async Task<List<Sample>> GetSamplesFromDb()
     {
-        using var context = DbFactory.CreateDbContext();
+        using var context = SampleService.GetContext();
         IQueryable<Sample> result = context.Samples;
         if (State.Catagory != "全部")
             result = result.Where(s => s.FoodCatagory.Name == State.Catagory);
