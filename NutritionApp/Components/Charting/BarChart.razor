@@ -1,0 +1,33 @@
+@inject IJSRuntime JSRuntime
+
+<div style="height:@($"{Height}px"); width:@($"{Width}px");">
+    <canvas id="@ChartId"></canvas>
+</div>
+
+@code {
+    [Parameter]
+    public int Width { get; set; } = 500; // Default width
+
+    [Parameter]
+    public int Height { get; set; } = 500; // Default height
+
+    [Parameter]
+    public int FontSize { get; set; } = 18; // Default font size
+
+    [Parameter]
+    public IEnumerable<string> Labels { get; set; } = [];
+
+    [Parameter]
+    public IEnumerable<Dataset> DataSets { get; set; } = [];
+
+    [Parameter]
+    public string ChartId { get; set; } = $"chart-{Guid.NewGuid()}";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("renderBarChart", ChartId, Labels, DataSets, FontSize);
+        }
+    }
+}

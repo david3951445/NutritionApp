@@ -1,4 +1,5 @@
 @using NutritionApp.Services
+@inject IJSRuntime JSRuntime
 
 <div style="height:@($"{Height}px"); width:@($"{Width}px");">
     <canvas id="@ChartId"></canvas>
@@ -25,9 +26,6 @@
 
     [Parameter]
     public string ChartId { get; set; } = $"chart-{Guid.NewGuid()}";
-
-    [Inject]
-    private IJSRuntime JSRuntime { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
