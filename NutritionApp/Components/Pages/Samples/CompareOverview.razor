@@ -7,7 +7,7 @@
 @if (Sample1 != null)
 {
     <SearchBar Label="樣品1" Placeholder="請輸入樣品1的整合編號" SearchData="@SearchData" DefaultValue="@Sample1.Name"
-        ItemSelected="Sample1_OnItemSelected" />
+        ItemSelected="GetSample1Overview" />
     <div>
         <p>@Sample1.CommonName</p>
     </div>
@@ -20,7 +20,7 @@ else
 @if (Sample2 != null)
 {
     <SearchBar Label="樣品2" Placeholder="請輸入樣品2的整合編號" SearchData="@SearchData" DefaultValue="Sample2.Name"
-        ItemSelected="Sample2_OnItemSelected" />
+        ItemSelected="GetSample2Overview" />
     <div>
         <p>@Sample2.CommonName</p>
     </div>
@@ -39,34 +39,24 @@ else
     Sample? Sample1;
     Sample? Sample2;
     List<string> SearchData { get; set; } = [];
+    SamplesContext context = default!;
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = SampleService.GetContext();
+
+        context = SampleService.GetContext();
         SearchData = await context.Samples.Select(s => s.Id).ToListAsync();
-        Sample1 = await GetSampleOverview(context, Id1);
-        Sample2 = await GetSampleOverview(context, Id2);
+        GetSample1Overview();
+        GetSample2Overview();
     }
 
-    async void Sample1_OnItemSelected(string id)
-    {
-        using var context = SampleService.GetContext();
-        Sample1 = await GetSampleOverview(context, Id1);
-    }
+    async void GetSample1Overview() => Sample1 = await GetSampleOverview(Id1);
 
-    async void Sample2_OnItemSelected(string id)
-    {
-        using var context = SampleService.GetContext();
-        Sample2 = await GetSampleOverview(context, Id2);
-    }
+    async void GetSample2Overview() => Sample2 = await GetSampleOverview(Id2);
 
-    async Task<Sample?> GetSampleOverview(SamplesContext context, string id)
-    {
-        return await context.Samples.Include(s => s.FoodCatagory).FirstOrDefaultAsync(s => s.Id == id);
-    }
+    async Task<Sample?> GetSampleOverview(string id) => await context.Samples
+    .Include(s => s.FoodCatagory)
+    .FirstOrDefaultAsync(s => s.Id == id);
 
-    void NavigateToDetails()
-    {
-        NavigationManager.NavigateTo($"/compare/{Id1}-{Id2}");
-    }
+    void NavigateToDetails() => NavigationManager.NavigateTo($"/compare/{Id1}-{Id2}");
 }
