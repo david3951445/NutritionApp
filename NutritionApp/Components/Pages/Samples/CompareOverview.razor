@@ -6,7 +6,7 @@
 <h1>樣品比較</h1>
 @if (Sample1 != null)
 {
-    <SearchBar Label="樣品1" Placeholder="請輸入樣品1的整合編號" SearchData="@SearchData" DefaultValue="@Sample1.Name"
+    <SearchBar Label="樣品1" Placeholder="請輸入樣品1的整合編號" SearchData="@SearchData" DefaultValue="@Sample1.Id"
         ItemSelected="GetSample1Overview" />
     <div>
         <p>@Sample1.CommonName</p>
@@ -19,7 +19,7 @@ else
 
 @if (Sample2 != null)
 {
-    <SearchBar Label="樣品2" Placeholder="請輸入樣品2的整合編號" SearchData="@SearchData" DefaultValue="Sample2.Name"
+    <SearchBar Label="樣品2" Placeholder="請輸入樣品2的整合編號" SearchData="@SearchData" DefaultValue="@Sample2.Id"
         ItemSelected="GetSample2Overview" />
     <div>
         <p>@Sample2.CommonName</p>
@@ -43,7 +43,6 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-
         context = SampleService.GetContext();
         SearchData = await context.Samples.Select(s => s.Id).ToListAsync();
         GetSample1Overview();
