@@ -6,18 +6,18 @@
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
 
-@if (ErrorMessage != null)
+@if (errorMessage != null)
 {
-    <h1>@ErrorMessage</h1>
+    <h1>@errorMessage</h1>
     return;
 }
 
-@if (AnalysisItemsByCatagory1.Any())
+@if (analysisItemsByCatagory1.Any())
 {
-    @for (var i = 0; i < AnalysisItemsByCatagory1.Count; i++)
+    @for (var i = 0; i < analysisItemsByCatagory1.Count; i++)
     {
-        var pair1 = AnalysisItemsByCatagory1.ToArray()[i];
-        var pair2 = AnalysisItemsByCatagory2.ToArray()[i];
+        var pair1 = analysisItemsByCatagory1.ToArray()[i];
+        var pair2 = analysisItemsByCatagory2.ToArray()[i];
 
         <FluentCard MinimalStyle="true">
             <FluentGrid>
@@ -47,27 +47,25 @@
     [Parameter] public string Id1 { get; set; } = "D32004"; // apple
     [Parameter] public string Id2 { get; set; } = "D08001"; // banana
 
-    Sample? Sample1;
-    Sample? Sample2;
-    Dictionary<string, AnalysisItem[]> AnalysisItemsByCatagory1 = [];
-    Dictionary<string, AnalysisItem[]> AnalysisItemsByCatagory2 = [];
-    string? ErrorMessage;
+    Dictionary<string, AnalysisItem[]> analysisItemsByCatagory1 = [];
+    Dictionary<string, AnalysisItem[]> analysisItemsByCatagory2 = [];
+    string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        Sample1 = await SampleService.GetSampleAsync(Id1);
-        if (Sample1 == null)
+        var sample1 = await SampleService.GetSampleAsync(Id1);
+        if (sample1 == null)
         {
-            ErrorMessage = "Sample 1 not found.";
+            errorMessage = "Sample 1 not found.";
             return;
         }
-        Sample2 = await SampleService.GetSampleAsync(Id2);
-        if (Sample2 == null)
+        var sample2 = await SampleService.GetSampleAsync(Id2);
+        if (sample2 == null)
         {
-            ErrorMessage = "Sample 2 not found.";
+            errorMessage = "Sample 2 not found.";
             return;
         }
-        AnalysisItemsByCatagory1 = Sample1.AnalysisItemsByCatagory;
-        AnalysisItemsByCatagory2 = Sample2.AnalysisItemsByCatagory;
+        analysisItemsByCatagory1 = sample1.AnalysisItemsByCatagory;
+        analysisItemsByCatagory2 = sample2.AnalysisItemsByCatagory;
     }
 }
