@@ -14,7 +14,8 @@ builder.Services.AddHttpClient()
     .AddDbContextFactory<SamplesContext>()
     .AddControllers();
 builder.Services.AddScoped<SearchState>()
-    .AddScoped<SampleService>();
+    .AddScoped<SampleService>()
+    .AddScoped<CompareState>();
 
 var app = builder.Build();
 

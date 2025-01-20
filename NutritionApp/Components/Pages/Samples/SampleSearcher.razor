@@ -1,0 +1,135 @@
+﻿@using SampleDatabaseBuilder.Services
+@using Microsoft.EntityFrameworkCore
+@using NutritionApp.Services
+@inject NavigationManager NavigationManager
+@inject SampleService SampleService
+
+<FluentStack Style="align-items: center">
+    <div>
+        <FluentLabel>關鍵字：</FluentLabel>
+        <FluentTextField @bind-Value="State.Keyword" @onkeydown="HandleKeyDown" Placeholder="請輸入關鍵字..." />
+    </div>
+    <div>
+        <FluentLabel>食品分類：</FluentLabel>
+        <FluentSelect Items="FoodCatagories" Id="category" @bind-Value="State.Catagory"></FluentSelect>
+    </div>
+    <div>
+        <FluentCheckbox @bind-Value="@SampleNameChecked" Label="樣品名稱" />
+        <FluentCheckbox @bind-Value="@CommonNameChecked" Label="俗名" />
+        <FluentCheckbox @bind-Value="@EnglishNameChecked" Label="英文名稱" />
+        <FluentCheckbox @bind-Value="@ContentDescriptionChecked" Label="內容物描述" />
+    </div>
+    <FluentButton Appearance="Appearance.Accent" @onclick="FetchData" Disabled="@IsLoading">
+        @(IsLoading ? "Searching..." : "Search")
+    </FluentButton>
+</FluentStack>
+
+<FluentDataGrid Items="@State.Samples.AsQueryable()" Pagination="pagination" RowSize="@DataGridRowSize.Medium"
+    ResizableColumns=true MultiLine="true">
+    <PropertyColumn Title="整合編號" Property="@(s => s.Id)" Sortable="true" Width=".8fr" />
+    <PropertyColumn Title="樣品名稱" Property="@(s => s.Name)" Sortable="true" Width="1.5fr" />
+    <PropertyColumn Title="俗名" Property="@(s => s.CommonName)" Sortable="true" Width="2fr" />
+    <PropertyColumn Title="樣品英文名稱" Property="@(s => s.EnglishName)" Sortable="true" Width="2.5fr" />
+    <PropertyColumn Title="內容物描述" Property="@(s => s.ContentDescription)" Sortable="true" Width="3fr" />
+    <PropertyColumn Title="食品分類" Property="@(s => s.FoodCatagory.Name)" Sortable="true" Width=".8fr" />
+    @AdditionalColumns
+</FluentDataGrid>
+
+<FluentPaginator State="@pagination" />
+
+@code {
+    [Parameter]
+    public RenderFragment? AdditionalColumns { get; set; }
+    [Parameter]
+    public SearchState State { get; set; } = null!;
+    [Parameter]
+    public int ItemsPerPage { get; set; } = 20;
+    int? Limit { get; set; } = 2;
+    bool IsLoading { get; set; }
+    List<string> FoodCatagories { get; set; } = [];
+    bool SampleNameChecked = true;
+    bool CommonNameChecked = true;
+    bool EnglishNameChecked = true;
+    bool ContentDescriptionChecked = true;
+    PaginationState pagination = null!;
+    SamplesContext context = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        pagination = new PaginationState { ItemsPerPage = ItemsPerPage };
+        context = SampleService.GetContext();
+        FoodCatagories = await context.FoodCatagories.Select(c => c.Name).ToListAsync();
+        FoodCatagories.Insert(0, "全部");
+        await FetchData();
+    }
+
+    private async Task FetchData()
+    {
+        if (IsLoading)
+            return;
+
+        try
+        {
+            IsLoading = true;
+            State.Samples = await GetSamplesFromDb();
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task<List<Sample>> GetSamplesFromDb()
+    {
+        IQueryable<Sample> result = context.Samples;
+        if (State.Catagory != "全部")
+            result = result.Where(s => s.FoodCatagory.Name == State.Catagory);
+
+        if (!string.IsNullOrEmpty(State.Keyword))
+        {
+            result = result.Where(s =>
+            (SampleNameChecked && s.Name.Contains(State.Keyword)) ||
+            (CommonNameChecked && s.CommonName != null && s.CommonName.Contains(State.Keyword)) ||
+            (EnglishNameChecked && s.EnglishName != null && s.EnglishName.Contains(State.Keyword)) ||
+            (ContentDescriptionChecked && s.ContentDescription != null && s.ContentDescription.Contains(State.Keyword)));
+        }
+
+        return await result
+        .Include(s => s.FoodCatagory)
+        .ToListAsync();
+    }
+
+    private async Task<List<Sample>> GetSamplesFromHttp()
+    {
+        // Call the API using the generated API client
+        using var httpClient = new HttpClient();
+        var apiClient = new FdaNutritionDatabaseClient(httpClient);
+        var response = await apiClient.ActivityGetAsync(
+        method: Method.OpenData,
+        infoId: InfoId._20,
+        offset: null,
+        limit: Limit,
+        sort: Sort.整合編號,
+        食品分類: State.Catagory,
+        樣品名稱: State.Keyword,
+        俗名: State.Keyword,
+        樣品英文名稱: null,
+        分析項分類: null,
+        分析項: null
+        );
+
+        return SampleService.ConvertToSamples(response).ToList();
+    }
+
+    private void ShowDetails(string id)
+    {
+        if (!string.IsNullOrEmpty(id))
+            NavigationManager.NavigateTo($"/samples/details/{id}");
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+            await FetchData();
+    }
+}

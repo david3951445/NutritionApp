@@ -1,61 +1,96 @@
 @using SampleDatabaseBuilder.Services
 @using Microsoft.EntityFrameworkCore
+@using NutritionApp.Services
 @inject SampleService SampleService
 @inject NavigationManager NavigationManager
+@inject CompareState CompareState
 
-<h1>樣品比較</h1>
-@if (Sample1 != null)
+@if (errorMessage != null)
 {
-    <SearchBar Label="樣品1" Placeholder="請輸入樣品1的整合編號" SearchData="@SearchData" DefaultValue="@Sample1.Id"
-        ItemSelected="GetSample1Overview" />
+    <h1>@errorMessage</h1>
+    return;
+}
+
+<FluentLabel Typo="Typography.H2">樣品搜尋</FluentLabel>
+<SampleSearcher State="state" ItemsPerPage="10">
+    <AdditionalColumns>
+        <TemplateColumn TGridItem="Sample" Title="操作選項" Align="Align.Center" Width="1.6fr">
+            @if (sample1 != null)
+            {
+                <FluentButton Appearance="Appearance.Lightweight" IconStart="@(new Icons.Regular.Size20.Add())"
+                    @onclick="@(async () => sample1 = await GetSampleOverview(context.Id) ?? sample1)">
+                    樣品1
+                </FluentButton>
+            }
+            @if (sample2 != null)
+            {
+                <FluentButton Appearance="Appearance.Lightweight" IconStart="@(new Icons.Regular.Size20.Add())"
+                    @onclick="@(async () => sample2 = await GetSampleOverview(context.Id) ?? sample2)">
+                    樣品2
+                </FluentButton>
+            }
+        </TemplateColumn>
+    </AdditionalColumns>
+</SampleSearcher>
+
+<FluentLabel Typo="Typography.H2">樣品比較</FluentLabel>
+<FluentStack Style="align-items: center">
     <div>
-        <p>@Sample1.CommonName</p>
+        @if (sample1 != null)
+        {
+            <FluentTextField Label="樣品1" Placeholder="請輸入樣品1的整合編號" Value="@sample1.Id" />
+            <p>@sample1.Name</p>
+        }
     </div>
-}
-else
-{
-    <p>查無整合編號為 @Id1 的樣品</p>
-}
-
-@if (Sample2 != null)
-{
-    <SearchBar Label="樣品2" Placeholder="請輸入樣品2的整合編號" SearchData="@SearchData" DefaultValue="@Sample2.Id"
-        ItemSelected="GetSample2Overview" />
     <div>
-        <p>@Sample2.CommonName</p>
+        @if (sample2 != null)
+        {
+            <FluentTextField Label="樣品2" Placeholder="請輸入樣品2的整合編號" Value="@sample2.Id" />
+            <p>@sample2.Name</p>
+        }
     </div>
-}
-else
-{
-    <p>查無整合編號為 @Id2 的樣品</p>
-
-}
-
-<FluentButton @onclick="NavigateToDetails">比較</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" Disabled="@(sample1 == null || sample2 == null)"
+        @onclick="NavigateToDetails">
+        比較
+    </FluentButton>
+</FluentStack>
 
 @code {
-    [Parameter] public string Id1 { get; set; } = "D32004"; // apple
-    [Parameter] public string Id2 { get; set; } = "D08001"; // banana
-    Sample? Sample1;
-    Sample? Sample2;
-    List<string> SearchData { get; set; } = [];
-    SamplesContext context = default!;
+    Sample? sample1 { get => CompareState.Sample1; set => CompareState.Sample1 = value; }
+    Sample? sample2 { get => CompareState.Sample2; set => CompareState.Sample2 = value; }
+    SamplesContext context = null!;
+    SearchState state = null!;
+    string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
         context = SampleService.GetContext();
-        SearchData = await context.Samples.Select(s => s.Id).ToListAsync();
-        GetSample1Overview();
-        GetSample2Overview();
+        state = CompareState.SearchState;
+        
+        if (sample1 == null)
+        {
+            const string apple = "D32004";
+            sample1 = await GetSampleOverview(apple);
+            if (sample1 == null)
+                errorMessage = $"查無整合編號為{apple}的樣品";
+        }
+
+        if (sample2 == null)
+        {
+            const string banana = "D08001";
+            sample2 = await GetSampleOverview(banana);
+            if (sample2 == null)
+                errorMessage = $"查無整合編號為{banana}的樣品";
+        }
     }
-
-    async void GetSample1Overview() => Sample1 = await GetSampleOverview(Id1);
-
-    async void GetSample2Overview() => Sample2 = await GetSampleOverview(Id2);
 
     async Task<Sample?> GetSampleOverview(string id) => await context.Samples
     .Include(s => s.FoodCatagory)
     .FirstOrDefaultAsync(s => s.Id == id);
 
-    void NavigateToDetails() => NavigationManager.NavigateTo($"/compare/{Id1}-{Id2}");
+    void NavigateToDetails()
+    {
+        if (sample1 != null && sample2 != null)
+            NavigationManager.NavigateTo($"/samples/compare/{sample1.Id}-{sample2.Id}");
+    }
 }
