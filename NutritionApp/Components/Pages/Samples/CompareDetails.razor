@@ -2,6 +2,7 @@
 @using SampleDatabaseBuilder.Services
 @using Microsoft.EntityFrameworkCore
 @using NutritionApp.Services
+@using NutritionApp.Components.Charting
 @inject SampleService SampleService
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
@@ -12,31 +13,32 @@
     return;
 }
 
-@if (analysisItemsByCatagory1.Any())
+@if (analysisItemsByCatagory.Any())
 {
-    @for (var i = 0; i < analysisItemsByCatagory1.Count; i++)
+    @foreach (CategoryItem item in analysisItemsByCatagory)
     {
-        var pair1 = analysisItemsByCatagory1.ToArray()[i];
-        var pair2 = analysisItemsByCatagory2.ToArray()[i];
-
         <FluentCard MinimalStyle="true">
             <FluentGrid>
                 <FluentGridItem xs="12">
-                    <FluentLabel Typo="Typography.H2">@pair1.Key</FluentLabel>
+                    <FluentLabel Typo="Typography.H2">@item.Category</FluentLabel>
                 </FluentGridItem>
                 <FluentGridItem xs="12" sm="6">
-                    <FluentDataGrid Items="@pair1.Value.AsQueryable()" Style="width: 60%; table-layout: auto;">
+                    <FluentDataGrid Items="@item.First.AsQueryable()" Style="width: 60%; table-layout: auto;">
                         <PropertyColumn Title="分析項名稱" Property="@(i => i.AnalysisItemInfo.Name)" />
                         <PropertyColumn Title="單位" Property="@(i => i.AnalysisItemInfo.Unit)" />
                         <PropertyColumn Title="每100g含量" Property="@(i => i.Value)" />
                     </FluentDataGrid>
                 </FluentGridItem>
                 <FluentGridItem xs="12" sm="6">
-                    <FluentDataGrid Items="@pair2.Value.AsQueryable()" Style="width: 60%; table-layout: auto;">
+                    <FluentDataGrid Items="@item.Second.AsQueryable()" Style="width: 60%; table-layout: auto;">
                         <PropertyColumn Title="分析項名稱" Property="@(i => i.AnalysisItemInfo.Name)" />
                         <PropertyColumn Title="單位" Property="@(i => i.AnalysisItemInfo.Unit)" />
                         <PropertyColumn Title="每100g含量" Property="@(i => i.Value)" />
                     </FluentDataGrid>
+                </FluentGridItem>
+                <FluentGridItem xs="12">
+                    <BarChart Labels="@item.First.Select(ai => ai.AnalysisItemInfo.Name)" DataSets="item.Datasets" Width="1000"
+                        Height="1000" />
                 </FluentGridItem>
             </FluentGrid>
         </FluentCard>
@@ -44,11 +46,10 @@
 }
 
 @code {
-    [Parameter] public string Id1 { get; set; } = "D32004"; // apple
-    [Parameter] public string Id2 { get; set; } = "D08001"; // banana
+    [Parameter] public string Id1 { get; set; }
+    [Parameter] public string Id2 { get; set; }
 
-    Dictionary<string, AnalysisItem[]> analysisItemsByCatagory1 = [];
-    Dictionary<string, AnalysisItem[]> analysisItemsByCatagory2 = [];
+    CategoryItem[] analysisItemsByCatagory = null!;
     string? errorMessage;
 
     protected override async Task OnInitializedAsync()
@@ -65,7 +66,32 @@
             errorMessage = "Sample 2 not found.";
             return;
         }
-        analysisItemsByCatagory1 = sample1.AnalysisItemsByCatagory;
-        analysisItemsByCatagory2 = sample2.AnalysisItemsByCatagory;
+
+        // Perform the left join
+        analysisItemsByCatagory = (from cat1 in sample1.AnalysisItemsByCatagory
+                                   join cat2 in sample2.AnalysisItemsByCatagory
+                                   on cat1.Key equals cat2.Key into joinedGroup
+                                   from cat2 in joinedGroup.DefaultIfEmpty()
+                                   select new CategoryItem(
+                                   Category: cat1.Key,
+                                   First: cat1.Value,
+                                   Second: cat2.Value,
+                                   Datasets: new Dataset[]
+                                   {
+GetDatSet(sample1.Name, cat1.Value, "rgba(255, 99, 132, 0.5)"), // Semi-transparent red
+GetDatSet(sample2.Name, cat2.Value,"rgba(54, 162, 235, 0.5)") // Semi-transparent blue
+                                   })
+        ).ToArray();
     }
+
+    Dataset GetDatSet(string label, AnalysisItem[] data, string backgroundColor) => new Dataset
+        {
+            Label = label,
+            BackgroundColor = backgroundColor,
+            Data = data
+        .Select(x => double.TryParse(x.Value, out var result) ? result : 0)
+        .ToArray(),
+        };
+
+    record struct CategoryItem(string Category, AnalysisItem[] First, AnalysisItem[] Second, Dataset[] Datasets);
 }
