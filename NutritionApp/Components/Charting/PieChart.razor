@@ -32,57 +32,8 @@
         if (firstRender)
         {
             if (!BackgroundColors.Any())
-                BackgroundColors = GenerateUniformColorsInRGB(Data.Count());
+                BackgroundColors = Utils.GenerateUniformColorsInRGB(Data.Count());
             await JSRuntime.InvokeVoidAsync("renderPieChart", ChartId, Labels, Data, BackgroundColors, FontSize);
         }
-    }
-
-    private List<string> GenerateUniformColorsInRGB(int count)
-    {
-        // Define the six colors: Red, Yellow, Green, Cyan, Blue, Magenta
-        int[][] colors = {
-new int[] { 255, 0, 0 }, // Red
-new int[] { 255, 255, 0 }, // Yellow
-new int[] { 0, 255, 0 }, // Green
-new int[] { 0, 255, 255 }, // Cyan
-new int[] { 0, 0, 255 }, // Blue
-new int[] { 255, 0, 255 } // Magenta
-};
-
-        List<string> colorList = new List<string>();
-
-        // Calculate the color transition based on the count
-        for (int i = 0; i < count; i++)
-        {
-            double percentage = (double)i / count;
-
-            // Determine the color segment and transition percentage
-            int segmentIndex = (int)(percentage * colors.Length);
-            segmentIndex = segmentIndex == colors.Length ? 0 : segmentIndex; // Ensure cyclic transition
-            double segmentPercentage = (percentage * colors.Length) - segmentIndex;
-
-            // Interpolate between the current and next color
-            int[] startColor = colors[segmentIndex];
-            int[] endColor = colors[(segmentIndex + 1) % colors.Length];
-
-            // Calculate the interpolated color
-            int[] interpolatedColor = new int[3];
-            for (int j = 0; j < 3; j++)
-            {
-                interpolatedColor[j] = (int)(startColor[j] + (endColor[j] - startColor[j]) * segmentPercentage);
-            }
-
-            // Add the resulting color to the list
-            colorList.Add($"rgba({interpolatedColor[0]},{interpolatedColor[1]},{interpolatedColor[2]}, 0.7)");
-        }
-
-        return colorList;
-    }
-
-    private List<string> GenerateRandomColors(int count)
-    {
-        return Utils.GenerateRandomPointsWithTolerance(count, 3, 0.1)
-        .Select(point => $"rgba({point[0] * 256},{point[1] * 256},{point[2] * 256}, 0.7)")
-        .ToList();
     }
 }

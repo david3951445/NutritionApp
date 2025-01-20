@@ -2,6 +2,55 @@ namespace NutritionApp.Services;
 
 public class Utils
 {
+    public static List<string> GenerateUniformColorsInRGB(int count)
+    {
+        // Define the six colors: Red, Yellow, Green, Cyan, Blue, Magenta
+        int[][] colors = [
+            [255, 0, 0], // Red
+            [255, 255, 0], // Yellow
+            [0, 255, 0], // Green
+            [0, 255, 255], // Cyan
+            [0, 0, 255], // Blue
+            [255, 0, 255] // Magenta
+        ];
+
+        List<string> colorList = [];
+
+        // Calculate the color transition based on the count
+        for (int i = 0; i < count; i++)
+        {
+            double percentage = (double)i / count;
+
+            // Determine the color segment and transition percentage
+            int segmentIndex = (int)(percentage * colors.Length);
+            segmentIndex = segmentIndex == colors.Length ? 0 : segmentIndex; // Ensure cyclic transition
+            double segmentPercentage = (percentage * colors.Length) - segmentIndex;
+
+            // Interpolate between the current and next color
+            int[] startColor = colors[segmentIndex];
+            int[] endColor = colors[(segmentIndex + 1) % colors.Length];
+
+            // Calculate the interpolated color
+            int[] interpolatedColor = new int[3];
+            for (int j = 0; j < 3; j++)
+            {
+                interpolatedColor[j] = (int)(startColor[j] + (endColor[j] - startColor[j]) * segmentPercentage);
+            }
+
+            // Add the resulting color to the list
+            colorList.Add($"rgba({interpolatedColor[0]},{interpolatedColor[1]},{interpolatedColor[2]}, 0.7)");
+        }
+
+        return colorList;
+    }
+
+    public static List<string> GenerateRandomColors(int count)
+    {
+        return GenerateRandomPointsWithTolerance(count, 3, 0.1)
+        .Select(point => $"rgba({point[0] * 256},{point[1] * 256},{point[2] * 256}, 0.7)")
+        .ToList();
+    }
+
     /// <summary>
     /// Generates uniformly distributed points in [0,1]^d with a minimum distance tolerance.
     /// </summary>
